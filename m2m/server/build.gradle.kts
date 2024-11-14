@@ -14,7 +14,7 @@ dependencies {
 sourceSets {
     main {
         java {
-            setSrcDirs(listOf("src/java"))
+            setSrcDirs(listOf("src/java/m2m/server"))
         }
         resources {
             setSrcDirs(listOf("src/resources"))

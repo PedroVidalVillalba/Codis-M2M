@@ -16,7 +16,7 @@ javafx {
 sourceSets {
     main {
         java {
-            setSrcDirs(listOf("src/java"))
+            setSrcDirs(listOf("src/java/m2m/peer"))
         }
         resources {
             setSrcDirs(listOf("src/resources"))
