@@ -1,6 +1,4 @@
-package m2m.server;
-
-import m2m.peer.Peer;
+package m2m.shared;
 
 public interface Server {
     void greet(Peer peer);

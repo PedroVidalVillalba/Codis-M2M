@@ -7,6 +7,8 @@ rootProject.name = "m2m"
 
 include("peer")
 include("server")
+include("shared")
 
 project(":peer").projectDir = file("m2m/peer/")
 project(":server").projectDir = file("m2m/server/")
+project(":shared").projectDir = file("m2m/shared/")

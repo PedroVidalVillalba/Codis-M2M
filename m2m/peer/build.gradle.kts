@@ -1,5 +1,6 @@
 plugins {
     id("m2m.java-conventions")
+    id("application")
     alias(libs.plugins.springboot)
     alias(libs.plugins.javafx.plugin)
 }
@@ -13,10 +14,14 @@ javafx {
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
+dependencies {
+    implementation(project(":shared"))
+}
+
 sourceSets {
     main {
         java {
-            setSrcDirs(listOf("src/java/m2m/peer"))
+            setSrcDirs(listOf("src/java"))
         }
         resources {
             setSrcDirs(listOf("src/resources"))

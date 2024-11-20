@@ -1,4 +1,4 @@
-package m2m.peer;
+package m2m.shared;
 
 public interface Peer {
     void greet(Peer peer);
