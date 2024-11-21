@@ -2,6 +2,7 @@ plugins {
     id("m2m.java-conventions")
     id("application")
     alias(libs.plugins.springboot)
+    kotlin("jvm")
 }
 
 application {
@@ -11,6 +12,7 @@ application {
 dependencies {
     implementation(project(":shared"))
     implementation(libs.postgresql)
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 sourceSets {
@@ -22,4 +24,10 @@ sourceSets {
             setSrcDirs(listOf("src/resources"))
         }
     }
+}
+repositories {
+    mavenCentral()
+}
+kotlin {
+    jvmToolchain(21)
 }
