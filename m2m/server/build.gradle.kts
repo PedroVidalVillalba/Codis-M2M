@@ -2,6 +2,7 @@ plugins {
     id("m2m.java-conventions")
     id("application")
     alias(libs.plugins.springboot)
+    kotlin("jvm")
 }
 
 application {
@@ -22,4 +23,10 @@ sourceSets {
             setSrcDirs(listOf("src/resources"))
         }
     }
+}
+repositories {
+    mavenCentral()
+}
+kotlin {
+    jvmToolchain(21)
 }
