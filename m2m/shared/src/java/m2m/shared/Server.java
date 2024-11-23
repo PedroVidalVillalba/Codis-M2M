@@ -1,12 +1,13 @@
 package m2m.shared;
 
 import java.rmi.Remote;
+import java.security.PublicKey;
 
 public interface Server extends Remote {
     /* Cadena de 128 X's, destinada a ser encriptada y desencriptada para autenticar a los usuarios */
     String AUTHENTICATION_STRING = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
-    boolean greet(Peer peer);
+    boolean greet(Peer client, PublicKey clientPublicKey);
 
     boolean signUp(Peer peer, String username, String password, String authentication);
     boolean login(Peer peer, String username, String password, String authentication);
