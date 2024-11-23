@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
 public class DataBase {
@@ -32,10 +30,28 @@ public class DataBase {
                             configuration.getProperty("port") + "/" +
                             configuration.getProperty("dataBase"),
                     user);
-        } catch(IOException | SQLException exception) {
+        } catch (IOException | SQLException exception) {
             System.err.println(exception.getMessage());
         }
     }
+
+    public static DataBase getCurrentDB() {
+        if (DataBase.currentDB == null) {
+            DataBase.currentDB = new DataBase();
+        }
+        return DataBase.currentDB;
+    }
+
+    public static void closeCurrentDB() {
+        try {
+            if (currentDB != null && connection != null) {
+                connection.close();
+            }
+        } catch (SQLException exception) {
+            System.err.println(exception.getMessage());
+        }
+    }
+
 
     /**
      * Lectura completa de la tabla Usuarios.
@@ -86,27 +102,6 @@ public class DataBase {
 
         return user_friends;
     }
-
-
-    public static DataBase getCurrentDB() {
-        if (DataBase.currentDB == null) {
-            DataBase.currentDB = new DataBase();
-        }
-        return DataBase.currentDB;
-    }
-
-    public static void closeCurrentDB() {
-        try {
-            if (currentDB != null && connection != null) {
-                connection.close();
-            }
-        } catch (SQLException exception) {
-            System.err.println(exception.getMessage());
-        }
-    }
-
-
-
 
 
     // Registro de un nuevo usuario

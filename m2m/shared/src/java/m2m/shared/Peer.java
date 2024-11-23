@@ -1,6 +1,7 @@
 package m2m.shared;
 
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.security.PublicKey;
 import java.util.Map;
 
@@ -8,9 +9,9 @@ public interface Peer extends Remote {
     /**
      * Devuelve el nombre de usuario del peer asociado a esta referencia remota.
      * @return Nombre de usuario.
-     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     * @throws RemoteException cuando ocurre algún error en la comunicación remota.
      */
-    String getUsername() throws Exception;
+    String getUsername() throws RemoteException;
 
     /**
      * Recibe un saludo de {@code greeter} para iniciar una conversación segura.
