@@ -34,6 +34,14 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         this.privateKey = security.loadPrivateKey(privateKeyPath);
     }
 
+    public static DataBase getDatabase() {
+        return database;
+    }
+
+    public Map<String, Peer> getConnectedUsers() {
+        return connectedUsers;
+    }
+
     @Override
     public void greet(Peer client, PublicKey clientPublicKey, byte[] clientNonce) throws Exception {
         /* Validar entradas */
