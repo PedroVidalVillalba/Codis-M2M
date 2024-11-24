@@ -13,3 +13,6 @@ build
 
 # Ignore IntellIJ stuff
 .idea/
+
+# Ignore all private keys
+server_private_key_*.pem

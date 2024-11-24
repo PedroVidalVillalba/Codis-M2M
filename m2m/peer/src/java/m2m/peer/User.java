@@ -2,11 +2,12 @@ package m2m.peer;
 
 import m2m.shared.Peer;
 import m2m.shared.Security;
+import m2m.shared.Security.Ephemeral;
 import m2m.shared.Server;
 
-import java.rmi.Remote;
+import javax.crypto.SecretKey;
 import java.rmi.RemoteException;
-import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,27 +20,35 @@ import java.util.Map;
  * Gestiona también la seguridad.
  */
 public class User {
-    private String username;
-    private String password;
-    private Peer reference;
-    private Security security;
-    private Server server;
-    private Map<String, Peer> activeFriends;    /* Pares (username, reference) */
-    private Map<String, List<Message>> chats;
+    private final String username;
+    private final String password;
+    private final Peer reference;
+    private final Security security;
+    private final Server server;
+    private final String authenticationCode;
+    private final Map<String, Peer> activeFriends;    /* Pares (username, reference) */
+    private final Map<String, List<Message>> chats;
+
+    private record AuthenticatedServer(Server server, String serverKeyPath) {}
 
     public User(String username, String password) throws Exception {
         this.security = new Security();
         this.activeFriends = new HashMap<>();
+        Map<String, SecretKey> authenticationKeys = new HashMap<>();
         this.chats = new HashMap<>();
-        this.server = findServer();
-//        if (server == null) {
-//            throw new RemoteException("No se pudo encontrar ningún servidor conocido");
-//        }
+        AuthenticatedServer authenticatedServer = findServer();
+        if (authenticatedServer == null) {
+            throw new RemoteException("No se pudo encontrar ningún servidor conocido");
+        }
+        this.server = authenticatedServer.server();
+        PublicKey serverPublicKey = security.loadPublicKey(authenticatedServer.serverKeyPath());
         this.username = username;
         this.password = security.digest(password, username);
-        this.reference = new SecurePeer(username, security, activeFriends, chats, server);
+        this.reference = new SecurePeer(username, security, activeFriends, authenticationKeys, chats, server, serverPublicKey);
 
-//        if (!greetServer()) throw new RemoteException("No se pudo establecer una conexión segura con el servidor");
+        Ephemeral ephemeral = security.generateEphemeral(server);
+        server.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
+        this.authenticationCode = security.encrypt(Server.AUTHENTICATION_STRING, server);
     }
 
     /* Getters */
@@ -68,53 +77,44 @@ public class User {
     }
 
     /* Métodos públicos que exportan la funcionalidad de la API */
-    public boolean greet(Peer peer) throws Exception {
-       KeyPair keyPair = security.generateKeyPair(peer);
-       return peer.greet(reference, keyPair.getPublic());
+    public void greet(String friendName) throws Exception {
+        Peer friend = activeFriends.get(friendName);
+        Ephemeral ephemeral = security.generateEphemeral(friend);
+        friend.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
     }
 
-    public boolean sendMessage(String friendName, String message) throws Exception {
+    public void sendMessage(String friendName, String message) throws Exception {
         Peer friend = activeFriends.get(friendName);
         List<Message> chat = chats.get(friendName);
         chat.add(new Message(message, MessageType.SENT));
-        return friend.message(this.reference, security.encrypt(message, friend));
+        friend.message(this.reference, security.encrypt(message, friend));
     }
 
-    public boolean receiveMessage(String friendName, String message) {
-        return true;
+    public void signUp() throws Exception {
+        server.signUp(this.reference, this.password, authenticationCode);
+    }
+    public void login() throws Exception {
+        server.login(this.reference, this.password, authenticationCode);
+    }
+    public void logout() throws Exception {
+        server.logout(this.reference, authenticationCode);
     }
 
-    public boolean signUp() throws Exception {
-        return server.signUp(this.reference, this.username, this.password, security.encrypt(Server.AUTHENTICATION_STRING, server));
-    }
-    public boolean login() throws Exception {
-        return server.login(this.reference, this.username, this.password, security.encrypt(Server.AUTHENTICATION_STRING, server));
-    }
-    public boolean logout() throws Exception {
-        return server.logout(this.reference, security.encrypt(Server.AUTHENTICATION_STRING, server));
+    public void requestFriendship(String friend) throws Exception {
+        server.friendRequest(this.reference, friend, authenticationCode);
     }
 
-    public boolean requestFriendship(String friend) throws Exception {
-        return server.friendRequest(this.reference, friend, security.encrypt(Server.AUTHENTICATION_STRING, server));
+    public void acceptFriendship(String friend) throws Exception {
+        server.friendAccept(this.reference, friend, authenticationCode);
     }
 
-    public boolean acceptFriendship(String friend) throws Exception {
-        return server.friendAccept(this.reference, friend, security.encrypt(Server.AUTHENTICATION_STRING, server));
-    }
-
-    public boolean rejectFriendship(String friend) throws Exception {
-        return server.friendReject(this.reference, friend, security.encrypt(Server.AUTHENTICATION_STRING, server));
+    public void rejectFriendship(String friend) throws Exception {
+        server.friendReject(this.reference, friend, authenticationCode);
     }
 
     /* Métodos privados que facilitan la lógica del código */
-    private static Server findServer() {
+    private static AuthenticatedServer findServer() {
         /* TODO: rellenar este stub */
         return null;
     }
-
-    private boolean greetServer() throws Exception {
-        KeyPair keyPair = security.generateKeyPair(server);
-        return server.greet(reference, keyPair.getPublic());
-    }
-
 }

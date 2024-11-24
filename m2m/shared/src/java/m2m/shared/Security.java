@@ -1,13 +1,15 @@
 package m2m.shared;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.*;
 import java.rmi.Remote;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,84 +20,127 @@ public class Security {
     public static final String SHA3_ALGORITHM = "SHA3-256";
     public static final String KEY_EXCHANGE_ALGORITHM = "X25519";   // Elliptic Curve Diffie-Hellman Ephemeral; ver RFC 7778
     public static final String HMAC_SHA3_ALGORITHM = "HmacSHA3-256";
+    public static final String DSA_ALGORITHM = "Ed25519";
+    public static final String SIGN_ALGORITHM = "SHA256withEdDSA";
     public static final int GCM_IV_LENGTH = 12;     // 96 bits
     public static final int GCM_TAG_LENGTH = 128;   // 128 bits
     public static final int AES_KEY_SIZE = 256;     // Bits para usar en AES
+    public static final int NONCE_LENGTH = 16;      // 128 bits
     public static final String HKDF_INFO = "M2M key derivation for AES";
 
-    private Map<Remote, SecretKey> keys;
-    private Map<Remote, KeyPair> ongoingDiffieHellman;
+    public record Ephemeral(PublicKey publicKey, PrivateKey privateKey, byte[] nonce) {}
+
+    private final Map<Remote, SecretKey> keys;
+    private final Map<Remote, Ephemeral> ongoingHandshakes;
 
     public Security() {
         this.keys = new HashMap<>();
-        this.ongoingDiffieHellman = new HashMap<>();
+        this.ongoingHandshakes = new HashMap<>();
     }
 
-    public String encrypt(String data, Remote remote) throws GeneralSecurityException {
-        SecretKey key = keys.get(remote);
+    /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
+    public byte[] encrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
+        ensureNotNull(data, key);
         Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
 
         byte[] iv = generateIV();   // Generar un nuevo Initialization Vector para cada encriptación
         GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
 
-        byte[] encryptedData = cipher.doFinal(data.getBytes());
-        byte[] combined = combine(iv, encryptedData);   // Prepend IV a los datos encriptados
-
-        return Base64.getEncoder().encodeToString(combined);
+        byte[] encryptedData = cipher.doFinal(data);
+        return combine(iv, encryptedData);   // Prepend IV a los datos encriptados
     }
 
-    public String decrypt(String data, Remote remote) throws GeneralSecurityException {
-        SecretKey key = keys.get(remote);
+    public String encrypt(String data, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(data, remote);
+        SecretKey key = getSecretKey(remote);
+        return Base64.getEncoder().encodeToString(encrypt(data.getBytes(), key));
+    }
+
+    public SecretKey encrypt(SecretKey secretKey, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(secretKey, remote);
+        SecretKey key = getSecretKey(remote);
+        return new SecretKeySpec(encrypt(secretKey.getEncoded(), key), AES_ALGORITHM);
+    }
+
+    /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
+    public byte[] decrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
+        ensureNotNull(data, key);
         Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
 
-        byte[] decodedData = Base64.getDecoder().decode(data);
-        byte[] iv = extractIV(decodedData);
-        byte[] encryptedData = extractEncryptedData(decodedData);
+        byte[] iv = extractIV(data);
+        byte[] encryptedData = extractEncryptedData(data);
+
         GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
 
-        byte[] decryptedData = cipher.doFinal(encryptedData);
+        return cipher.doFinal(encryptedData);
+    }
 
-        return new String(decryptedData);
+    public String decrypt(String data, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(data, remote);
+        SecretKey key = getSecretKey(remote);
+        byte[] decodedData = Base64.getDecoder().decode(data);
+        return new String(decrypt(decodedData, key));
+    }
+
+    public SecretKey decrypt(SecretKey encodedKey, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(encodedKey, remote);
+        SecretKey key = getSecretKey(remote);
+        return new SecretKeySpec(decrypt(encodedKey.getEncoded(), key),AES_ALGORITHM);
     }
 
     public String digest(String data, String salt) throws GeneralSecurityException {
-        MessageDigest digest = MessageDigest.getInstance(SHA3_ALGORITHM);
-        digest.update(salt.getBytes()); // Incorporar la sal
-        byte[] hash = digest.digest(data.getBytes());
+        ensureNotNull(data, salt);
+        byte[] hash = digest(data.getBytes(), salt.getBytes());
         return Base64.getEncoder().encodeToString(hash);
     }
 
-    public KeyPair generateKeyPair() throws GeneralSecurityException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(KEY_EXCHANGE_ALGORITHM);
-        return keyGen.generateKeyPair();
+    /* Método digest de bajo nivel actuando sobre arrays de bytes directamente */
+    public byte[] digest(byte[] data, byte[] salt) throws GeneralSecurityException {
+        ensureNotNull(data, salt);
+        MessageDigest digest = MessageDigest.getInstance(SHA3_ALGORITHM);
+        digest.update(salt);
+        return digest.digest(data);
     }
 
-    /** Genera un par efímero de clave pública-clave privada, y lo asocia a {@code remote} */
-    public KeyPair generateKeyPair(Remote remote) throws GeneralSecurityException {
+    public Ephemeral generateEphemeral() throws GeneralSecurityException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance(KEY_EXCHANGE_ALGORITHM);
         KeyPair keyPair = keyGen.generateKeyPair();
-        ongoingDiffieHellman.put(remote, keyPair);
-        return keyPair;
+        byte[] nonce = generateNonce();
+        return new Ephemeral(keyPair.getPublic(), keyPair.getPrivate(), nonce);
     }
 
-    public KeyPair getOngoingKeyPair(Remote remote) {
-        return ongoingDiffieHellman.get(remote);
+    /** Genera un par efímero de clave pública-clave privada, y un nonce y los asocia a {@code remote} */
+    public synchronized Ephemeral generateEphemeral(Remote remote) throws GeneralSecurityException {
+        ensureNotNull(remote);
+        Ephemeral ephemeral = generateEphemeral();
+        ongoingHandshakes.put(remote, ephemeral);
+        return ephemeral;
     }
 
-    public void removeOngoingKeyPair(Remote remote) {
-        ongoingDiffieHellman.remove(remote);
+    public synchronized Ephemeral getEphemeral(Remote remote) throws GeneralSecurityException {
+        ensureNotNull(remote);
+
+        Ephemeral ephemeral = ongoingHandshakes.remove(remote);
+        if (ephemeral == null) {
+            throw new GeneralSecurityException("Datos efímeros de seguridad no encontrados para " + remote);
+        }
+        return ephemeral;
     }
 
     public byte[] computeSharedSecret(PrivateKey privateKey, PublicKey publicKey) throws GeneralSecurityException {
+        ensureNotNull(privateKey, publicKey);
+
         KeyAgreement keyAgreement = KeyAgreement.getInstance(KEY_EXCHANGE_ALGORITHM);
         keyAgreement.init(privateKey);
         keyAgreement.doPhase(publicKey, true);
         return keyAgreement.generateSecret();
     }
 
-    public SecretKey deriveAESKey(byte[] sharedSecret, byte[] salt) throws GeneralSecurityException {
+    public SecretKey deriveSecretKey(byte[] sharedSecret, byte[] salt) throws GeneralSecurityException {
+        ensureNotNull(sharedSecret, salt);
+
         /* HKDF (HMAC-based Key Derivation Function) para derivar una clave para AES */
         Mac hmac = Mac.getInstance(HMAC_SHA3_ALGORITHM);
         SecretKeySpec secretKeySpec = new SecretKeySpec(sharedSecret, HMAC_SHA3_ALGORITHM);
@@ -108,22 +153,96 @@ public class Security {
         return new SecretKeySpec(expandedKey, AES_ALGORITHM);
     }
 
-    public void addSecretKey(Remote remote, SecretKey secretKey) {
+    public synchronized void storeSecretKey(Remote remote, SecretKey secretKey) {
+        ensureNotNull(remote, secretKey);
         keys.put(remote, secretKey);
     }
+
+    public synchronized SecretKey getSecretKey(Remote remote) throws GeneralSecurityException {
+        ensureNotNull(remote);
+        SecretKey key = keys.get(remote);
+        if (key == null) {
+            throw new GeneralSecurityException("Ninguna clave secreta asociada al objeto remoto " + remote);
+        }
+        return key;
+    }
+
+    public PublicKey loadPublicKey(String resourcePath) throws GeneralSecurityException, IOException {
+        ensureNotNull(resourcePath);
+        try (InputStream inputStream = Security.class.getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                throw new IOException("Public key resource not found: " + resourcePath);
+            }
+            byte[] publicKeyBytes = inputStream.readAllBytes();
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance(DSA_ALGORITHM);
+            return keyFactory.generatePublic(spec);
+        }
+    }
+
+    public PrivateKey loadPrivateKey(String resourcePath) throws GeneralSecurityException, IOException {
+        ensureNotNull(resourcePath);
+        try (InputStream inputStream = Security.class.getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                throw new IOException("Private key resource not found: " + resourcePath);
+            }
+            byte[] privateKeyBytes = inputStream.readAllBytes();
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance(DSA_ALGORITHM);
+            return keyFactory.generatePrivate(spec);
+        }
+    }
+
+    public byte[] sign(byte[] data, PrivateKey privateKey) throws GeneralSecurityException {
+        ensureNotNull(data, privateKey);
+        Signature signature = Signature.getInstance(SIGN_ALGORITHM);
+        signature.initSign(privateKey);
+        signature.update(data);
+        return signature.sign();
+    }
+
+    public boolean verifySignature(byte[] data, byte[] signedData, PublicKey publicKey) throws GeneralSecurityException {
+        ensureNotNull(data, signedData, publicKey);
+        Signature signature = Signature.getInstance(SIGN_ALGORITHM);
+        signature.initVerify(publicKey);
+        signature.update(data);
+        return signature.verify(signedData);
+    }
+
+    public SecretKey generateAuthenticationKey() throws GeneralSecurityException {
+        KeyGenerator generator = KeyGenerator.getInstance(AES_ALGORITHM);
+        SecureRandom random = SecureRandom.getInstanceStrong();
+        generator.init(AES_KEY_SIZE, random);
+        return generator.generateKey();
+    }
+
+    public static void ensureNotNull(Object... objects) throws IllegalArgumentException {
+        for (Object object : objects) {
+            if (object == null) {
+                throw new IllegalArgumentException("Algún argumento nulo");
+            }
+        }
+    }
+
+    public byte[] combine(byte[]... arrays) throws GeneralSecurityException {
+        ensureNotNull((Object[]) arrays);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (byte[] array : arrays) {
+            try {
+                outputStream.write(array);
+            } catch (IOException e) {
+                throw new GeneralSecurityException("Error al combinar arrays", e);
+            }
+        }
+        return outputStream.toByteArray();
+    }
+
 
     /* Métodos privados */
     private byte[] generateIV() {
         byte[] iv = new byte[GCM_IV_LENGTH];
         new SecureRandom().nextBytes(iv);
         return iv;
-    }
-
-    private byte[] combine(byte[] iv, byte[] encryptedData) {
-        byte[] combined = new byte[iv.length + encryptedData.length];
-        System.arraycopy(iv, 0, combined, 0, iv.length);
-        System.arraycopy(encryptedData, 0, combined, iv.length, encryptedData.length);
-        return combined;
     }
 
     private byte[] extractIV(byte[] combinedData) {
@@ -136,6 +255,12 @@ public class Security {
         byte[] encryptedData = new byte[combinedData.length - GCM_IV_LENGTH];
         System.arraycopy(combinedData, GCM_IV_LENGTH, encryptedData, 0, encryptedData.length);
         return encryptedData;
+    }
+
+    private byte[] generateNonce() {
+        byte[] nonce = new byte[NONCE_LENGTH];
+        new SecureRandom().nextBytes(nonce);
+        return nonce;
     }
 
     private byte[] hkdfExpand(byte[] prk) throws GeneralSecurityException {

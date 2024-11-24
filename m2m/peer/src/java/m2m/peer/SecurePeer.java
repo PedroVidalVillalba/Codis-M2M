@@ -2,32 +2,37 @@ package m2m.peer;
 
 import m2m.shared.Peer;
 import m2m.shared.Security;
+import m2m.shared.Security.Ephemeral;
 import m2m.shared.Server;
 
 import javax.crypto.SecretKey;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.KeyPair;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SecurePeer extends UnicastRemoteObject implements Peer {
-    final private String username;
-    private Security security;
-    private Map<String, Peer> activeFriends;
-    private Map<String, List<Message>> chats;
-    private Server server;
+    private final String username;
+    private final Security security;
+    private final Map<String, Peer> activeFriends;
+    private final Map<String, SecretKey> authenticationKeys;
+    private final Map<String, List<Message>> chats;
+    private final Server server;
+    private final PublicKey serverPublicKey;
 
-    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, List<Message>> chats, Server server) throws RemoteException {
+    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, List<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
         super();
+        Security.ensureNotNull(username, security, activeFriends, authenticationKeys, server, serverPublicKey);
         this.username = username;
         this.security = security;
         this.activeFriends = activeFriends;
+        this.authenticationKeys = authenticationKeys;
         this.chats = chats;
         this.server = server;
+        this.serverPublicKey = serverPublicKey;
     }
 
     @Override
@@ -36,75 +41,146 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     }
 
     @Override
-    public boolean greet(Peer greeter, PublicKey greeterPublicKey) throws Exception {
-        /* Generar una clave efímera */
-        KeyPair keyPair = security.generateKeyPair();
+    public void greet(Peer greeter, PublicKey greeterPublicKey, byte[] greeterNonce) throws Exception {
+        /* Validar entradas */
+        Security.ensureNotNull(greeter, greeterPublicKey, greeterNonce);
+
+        /* Generar una clave efímera y un número aleatorio de un solo uso */
+        Ephemeral ephemeral = security.generateEphemeral();
+        PrivateKey ephemeralPrivateKey = ephemeral.privateKey();
+        PublicKey ephemeralPublicKey = ephemeral.publicKey();
+        byte[] nonce = ephemeral.nonce();
 
         /* Calcular el secreto compartido usando la clave pública de quien inicia el saludo */
-        byte[] sharedSecret = security.computeSharedSecret(keyPair.getPrivate(), greeterPublicKey);
+        byte[] sharedSecret = security.computeSharedSecret(ephemeralPrivateKey, greeterPublicKey);
+        /* Combinar la información pública usada para verificar que el saludo fue correcto */
+        byte[] handshakeData = security.combine(greeterNonce, nonce, greeterPublicKey.getEncoded(), ephemeralPublicKey.getEncoded());
 
-        boolean success = greeter.greetBack(this, keyPair.getPublic());
-        if (!success) throw new RemoteException("Fallo en el saludo con " + greeter.getUsername());
+        /* Cifrar la información del saludo con la clave compartida por el servidor para autenticarse */
+        SecretKey authenticationKey = authenticationKeys.get(greeter.getUsername());
+        byte[] challenge = security.digest(handshakeData, security.combine(greeter.getUsername().getBytes(), username.getBytes()));
+        byte[] signature = security.encrypt(challenge, authenticationKey);
 
-        SecretKey secretKey = security.deriveAESKey(sharedSecret, new byte[0]);
-        security.addSecretKey(greeter, secretKey);
+        /* Generar la clave compartida para la encriptación de la comunicación */
+        SecretKey secretKey = security.deriveSecretKey(sharedSecret, handshakeData);
 
-        return true;
+        /* Enviar la clave pública del servidor, el nonce utilizado y la autenticación cifrada, lo que también vale para confirmar que el servidor tiene la clave */
+        byte[] greeterResponse = greeter.greetBack(this, ephemeralPublicKey, nonce, security.encrypt(signature, secretKey));
+        if (!Arrays.equals(security.digest(handshakeData, signature), security.decrypt(greeterResponse, authenticationKey))) {
+            throw new GeneralSecurityException("Falló la verificación de la respuesta del peer durante el saludo.");
+        }
+
+        security.storeSecretKey(greeter, secretKey);
     }
 
     @Override
-    public boolean greetBack(Remote greeted, PublicKey greetedPublicKey) throws Exception {
-        /* Generar una clave efímera */
-        KeyPair keyPair = security.getOngoingKeyPair(greeted);
+    public byte[] greetBack(Remote greeted, PublicKey greetedPublicKey, byte[] greetedNonce, byte[] challenge) throws Exception {
+        /* Validar entradas */
+        Security.ensureNotNull(greeted, greetedPublicKey, greetedNonce, challenge);
+
+        /* Recuperar la información generada previamente asociada a este saludo */
+        Ephemeral ephemeral = security.getEphemeral(greeted);
+        PrivateKey privateKey = ephemeral.privateKey();
+        PublicKey publicKey = ephemeral.publicKey();
+        byte[] nonce = ephemeral.nonce();
 
         /* Calcular el secreto compartido usando la clave pública de quien responde al saludo */
-        byte[] sharedSecret = security.computeSharedSecret(keyPair.getPrivate(), greetedPublicKey);
+        byte[] sharedSecret = security.computeSharedSecret(privateKey, greetedPublicKey);
+        /* Combinar la información pública usada para verificar que el saludo fue correcto */
+        byte[] handshakeData = security.combine(nonce, greetedNonce, publicKey.getEncoded(), greetedPublicKey.getEncoded());
 
-        security.removeOngoingKeyPair(greeted);
+        /* Generar la clave compartida para la encriptación de la comunicación */
+        SecretKey secretKey = security.deriveSecretKey(sharedSecret, handshakeData);
 
-        SecretKey secretKey = security.deriveAESKey(sharedSecret, new byte[0]);
-        security.addSecretKey(greeted, secretKey);
+        /* Autenticar la identidad del iniciador de la conversación, así como confirmar que compartimos la misma clave secreta */
+        byte[] signature = security.decrypt(challenge, secretKey);
+        authenticateRemote(greeted, handshakeData, signature);
 
-        return true;
+        security.storeSecretKey(greeted, secretKey);
+
+        return generateResponse(greeted, handshakeData, signature, secretKey);
     }
 
     @Override
-    public boolean message(Peer sender, String message) throws Exception {
+    public void message(Peer sender, String message) throws Exception {
+        Security.ensureNotNull(sender, message);
+
         Peer friend = activeFriends.get(sender.getUsername());
-        if (friend == null) return false;
+        if (friend == null) {
+            throw new RuntimeException("El emisor del mensaje no está registrado como amigo del receptor");
+        }
+
         security.decrypt(message, friend);
         List<Message> chat = chats.get(friend.getUsername());
         chat.add(new Message(message, MessageType.RECEIVED));
-        return true;
     }
 
     @Override
-    public boolean addActiveFriend(Peer friend, String authentication) throws Exception {
-        if (serverFailedToAuthenticate(authentication)) return false;
-        activeFriends.put(friend.getUsername(), friend);
-        chats.put(friend.getUsername(), new ArrayList<>());
-        return true;
+    public void addActiveFriend(Peer friend, SecretKey encryptedAuthenticationKey, String authentication) throws Exception {
+        Security.ensureNotNull(friend, encryptedAuthenticationKey, authentication);
+        verifyServerAuthentication(authentication);
+
+        String friendName = friend.getUsername();
+        SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKey, server);
+        activeFriends.put(friendName, friend);
+        authenticationKeys.put(friendName, authenticationKey);
+        chats.put(friendName, new ArrayList<>());
     }
 
     @Override
-    public boolean addActiveFriend(Map<String, Peer> friends, String authentication) throws Exception {
-        if (serverFailedToAuthenticate(authentication)) return false;
+    public void addActiveFriend(Map<String, Peer> friends, Map<String, SecretKey> encryptedAuthenticationKeys, String authentication) throws Exception {
+        Security.ensureNotNull(friends, encryptedAuthenticationKeys, authentication);
+        verifyServerAuthentication(authentication);
+
         activeFriends.putAll(friends);
-        for (String friend : activeFriends.keySet()) {
-            chats.put(friend, new ArrayList<>());
+
+        for (String friendName : activeFriends.keySet()) {
+            SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKeys.get(friendName), server);
+            authenticationKeys.put(friendName, authenticationKey);
+            chats.put(friendName, new ArrayList<>());
         }
-        return true;
     }
 
     @Override
-    public boolean removeActiveFriend(Peer friend, String authentication) throws Exception {
-        if (serverFailedToAuthenticate(authentication)) return false;
-        activeFriends.remove(friend.getUsername());
-        chats.remove(friend.getUsername());
-        return true;
+    public void removeActiveFriend(Peer friend, String authentication) throws Exception {
+        Security.ensureNotNull(friend, authentication);
+        verifyServerAuthentication(authentication);
+
+        String friendName = friend.getUsername();
+        activeFriends.remove(friendName);
+        authenticationKeys.remove(friendName);
+        chats.remove(friendName);
     }
 
-    private boolean serverFailedToAuthenticate(String authentication) throws Exception {
-        return !security.decrypt(authentication, server).equals(Server.AUTHENTICATION_STRING);
+    private void verifyServerAuthentication(String authentication) throws Exception {
+        if (!security.decrypt(authentication, server).equals(Server.AUTHENTICATION_STRING)) {
+            throw new GeneralSecurityException("No se pudo garantizar la seguridad de la comunicación con el servidor");
+        }
     }
+
+    private void authenticateRemote(Remote remote, byte[] handshakeData, byte[] signature) throws Exception {
+        if (remote instanceof Server) {
+            if (!security.verifySignature(handshakeData, signature, serverPublicKey)) {
+                throw new GeneralSecurityException("No se pudo verificar la autenticidad del servidor durante el saludo");
+            }
+        } else if (remote instanceof Peer peer) {
+            String peerName = peer.getUsername();
+            SecretKey authenticationKey = authenticationKeys.get(peerName);
+            byte[] expectedChallenge = security.digest(handshakeData, security.combine(username.getBytes(), peerName.getBytes()));
+            if (!Arrays.equals(expectedChallenge, security.decrypt(signature, authenticationKey))) {
+                throw new GeneralSecurityException("No se pudo verificar la autenticidad del peer " + peerName + " durante el saludo");
+            }
+        }
+    }
+
+    private byte[] generateResponse(Remote remote, byte[] handshakeData, byte[] signature, SecretKey secretKey) throws Exception {
+        if (remote instanceof Server) {
+            return security.encrypt(security.digest(handshakeData, signature), secretKey);
+        } else if (remote instanceof Peer peer) {
+            SecretKey authenticationKey = authenticationKeys.get(peer.getUsername());
+            return security.encrypt(security.digest(handshakeData, signature), authenticationKey);
+        }
+        throw new IllegalArgumentException("No se pudo determinar el tipo del objeto remoto para el que generar la respuesta");
+    }
+
 }
