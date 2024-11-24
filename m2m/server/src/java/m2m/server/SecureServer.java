@@ -27,6 +27,14 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         this.security = new Security();
     }
 
+    public static DataBase getDatabase() {
+        return database;
+    }
+
+    public Map<String, Peer> getConnectedUsers() {
+        return connectedUsers;
+    }
+
     @Override
     public boolean greet(Peer client, PublicKey clientPublicKey) throws Exception {
         /* Generar una clave efímera */
