@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.security.*;
 import java.rmi.Remote;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -16,12 +17,12 @@ import java.util.Map;
 
 public class Security {
     /* Descripción de los algoritmos y constantes de seguridad usadas */
-    public static final String AES_ALGORITHM = "AES/GCM/NoPadding";
+    public static final String AES_ALGORITHM = "AES";
+    public static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     public static final String SHA3_ALGORITHM = "SHA3-256";
     public static final String KEY_EXCHANGE_ALGORITHM = "X25519";   // Elliptic Curve Diffie-Hellman Ephemeral; ver RFC 7778
     public static final String HMAC_SHA3_ALGORITHM = "HmacSHA3-256";
-    public static final String DSA_ALGORITHM = "Ed25519";
-    public static final String SIGN_ALGORITHM = "SHA256withEdDSA";
+    public static final String SIGN_ALGORITHM = "Ed25519";
     public static final int GCM_IV_LENGTH = 12;     // 96 bits
     public static final int GCM_TAG_LENGTH = 128;   // 128 bits
     public static final int AES_KEY_SIZE = 256;     // Bits para usar en AES
@@ -41,7 +42,7 @@ public class Security {
     /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
     public byte[] encrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
         ensureNotNull(data, key);
-        Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
         byte[] iv = generateIV();   // Generar un nuevo Initialization Vector para cada encriptación
         GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
@@ -63,10 +64,16 @@ public class Security {
         return new SecretKeySpec(encrypt(secretKey.getEncoded(), key), AES_ALGORITHM);
     }
 
+    public byte[] encrypt(byte[] data, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(data, remote);
+        SecretKey key = getSecretKey(remote);
+        return encrypt(data, key);
+    }
+
     /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
     public byte[] decrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
         ensureNotNull(data, key);
-        Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
         byte[] iv = extractIV(data);
         byte[] encryptedData = extractEncryptedData(data);
@@ -88,6 +95,12 @@ public class Security {
         ensureNotNull(encodedKey, remote);
         SecretKey key = getSecretKey(remote);
         return new SecretKeySpec(decrypt(encodedKey.getEncoded(), key),AES_ALGORITHM);
+    }
+
+    public byte[] decrypt(byte[] data, Remote remote) throws GeneralSecurityException {
+        ensureNotNull(data, remote);
+        SecretKey key = getSecretKey(remote);
+        return decrypt(data, key);
     }
 
     public String digest(String data, String salt) throws GeneralSecurityException {
@@ -167,28 +180,28 @@ public class Security {
         return key;
     }
 
-    public PublicKey loadPublicKey(String resourcePath) throws GeneralSecurityException, IOException {
+    public static PublicKey loadPublicKey(String resourcePath) throws GeneralSecurityException, IOException {
         ensureNotNull(resourcePath);
         try (InputStream inputStream = Security.class.getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 throw new IOException("Public key resource not found: " + resourcePath);
             }
-            byte[] publicKeyBytes = inputStream.readAllBytes();
+            byte[] publicKeyBytes = extractPemKey(inputStream.readAllBytes());
             X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance(DSA_ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance(SIGN_ALGORITHM);
             return keyFactory.generatePublic(spec);
         }
     }
 
-    public PrivateKey loadPrivateKey(String resourcePath) throws GeneralSecurityException, IOException {
+    public static PrivateKey loadPrivateKey(String resourcePath) throws GeneralSecurityException, IOException {
         ensureNotNull(resourcePath);
         try (InputStream inputStream = Security.class.getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 throw new IOException("Private key resource not found: " + resourcePath);
             }
-            byte[] privateKeyBytes = inputStream.readAllBytes();
+            byte[] privateKeyBytes = extractPemKey(inputStream.readAllBytes());
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance(DSA_ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance(SIGN_ALGORITHM);
             return keyFactory.generatePrivate(spec);
         }
     }
@@ -216,6 +229,25 @@ public class Security {
         return generator.generateKey();
     }
 
+
+    public byte[] generateNonce() {
+        byte[] nonce = new byte[NONCE_LENGTH];
+        new SecureRandom().nextBytes(nonce);
+        return nonce;
+    }
+
+    public byte[] extractNonce(byte[] combinedData) {
+        byte[] nonce = new byte[NONCE_LENGTH];
+        System.arraycopy(combinedData, 0, nonce, 0, NONCE_LENGTH);
+        return nonce;
+    }
+
+    public byte[] removeNonce(byte[] combinedData) {
+        byte[] data = new byte[combinedData.length - NONCE_LENGTH];
+        System.arraycopy(combinedData, NONCE_LENGTH, data, 0, data.length);
+        return data;
+    }
+
     public static void ensureNotNull(Object... objects) throws IllegalArgumentException {
         for (Object object : objects) {
             if (object == null) {
@@ -224,7 +256,7 @@ public class Security {
         }
     }
 
-    public byte[] combine(byte[]... arrays) throws GeneralSecurityException {
+    public static byte[] combine(byte[]... arrays) throws GeneralSecurityException {
         ensureNotNull((Object[]) arrays);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         for (byte[] array : arrays) {
@@ -237,6 +269,16 @@ public class Security {
         return outputStream.toByteArray();
     }
 
+    public static byte[] serialize(Object... objects) throws IOException {
+        ensureNotNull(objects);
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        try (ObjectOutputStream objectStream = new ObjectOutputStream(byteStream)) {
+            for (Object object : objects) {
+                objectStream.writeObject(object);
+            }
+        }
+        return byteStream.toByteArray();
+    }
 
     /* Métodos privados */
     private byte[] generateIV() {
@@ -257,10 +299,13 @@ public class Security {
         return encryptedData;
     }
 
-    private byte[] generateNonce() {
-        byte[] nonce = new byte[NONCE_LENGTH];
-        new SecureRandom().nextBytes(nonce);
-        return nonce;
+    private static byte[] extractPemKey(byte[] pemKey) {
+        String pemContent = new String(pemKey);
+
+        pemContent = pemContent .replaceAll("-----(BEGIN|END) (PUBLIC|PRIVATE) KEY-----", "")
+                                .replaceAll("\\s", "");
+
+        return Base64.getDecoder().decode(pemContent);
     }
 
     private byte[] hkdfExpand(byte[] prk) throws GeneralSecurityException {

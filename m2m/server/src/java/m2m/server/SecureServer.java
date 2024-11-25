@@ -11,16 +11,10 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-// TODO: tema seguridad y conexión RMI; hacer que sea la propia base de datos la que lance las excepciones
 public class SecureServer extends UnicastRemoteObject implements Server{
-
-    private static DataBase database;
+    private final DataBase database;
     private final Map<String, Peer> connectedUsers;
     private final Security security;
     private final PrivateKey privateKey;
@@ -31,11 +25,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         this.connectedUsers = new HashMap<>();
         this.security = new Security();
         String privateKeyPath = "/keys/server_private_key_" + InetAddress.getLocalHost().getHostName() + ".pem";
-        this.privateKey = security.loadPrivateKey(privateKeyPath);
-    }
-
-    public static DataBase getDatabase() {
-        return database;
+        this.privateKey = Security.loadPrivateKey(privateKeyPath);
     }
 
     public Map<String, Peer> getConnectedUsers() {
@@ -56,7 +46,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         /* Calcular el secreto compartido usando la clave pública de quien inicia el saludo */
         byte[] sharedSecret = security.computeSharedSecret(ephemeralPrivateKey, clientPublicKey);
         /* Combinar la información pública usada para verificar que el saludo fue correcto */
-        byte[] handshakeData = security.combine(clientNonce, serverNonce, clientPublicKey.getEncoded(), ephemeralPublicKey.getEncoded());
+        byte[] handshakeData = Security.combine(clientNonce, serverNonce, clientPublicKey.getEncoded(), ephemeralPublicKey.getEncoded());
 
         /* Cifrar la información del saludo con la clave privada del servidor para autenticarse  */
         byte[] signature = security.sign(handshakeData, privateKey);
@@ -73,74 +63,83 @@ public class SecureServer extends UnicastRemoteObject implements Server{
     }
 
     @Override
-    public void signUp(Peer peer, String password, String authentication) throws Exception {
+    public void signUp(Peer peer, String password, byte[] authentication) throws Exception {
         Security.ensureNotNull(peer, password, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.SIGN_UP, peer, password);
 
         String username = peer.getUsername();
-        if (!database.registerUser(username, password)) {
-            throw new SQLException("No se pudo registrar al usuario en la base de datos");
-        }
+        byte[] rawPassword = Base64.getDecoder().decode(password);
+        database.registerUser(username, rawPassword);
 
         connectedUsers.put(username, peer);
         notifyFriendConnection(username);
     }
 
     @Override
-    public void login(Peer peer, String password, String authentication) throws Exception {
+    public void login(Peer peer, String password, byte[] authentication) throws Exception {
         Security.ensureNotNull(peer, password, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.LOGIN, peer, password);
 
         String username = peer.getUsername();
-        if (!database.loginUser(username, password)) {
-            throw new SQLException("No se pudo iniciar sesión con el usuario en la base de datos");
-        }
+        byte[] rawPassword = Base64.getDecoder().decode(password);
+        database.loginUser(username, rawPassword);
 
         connectedUsers.put(username, peer);
         notifyFriendConnection(username);
     }
 
     @Override
-    public void logout(Peer peer, String authentication) throws Exception {
+    public void logout(Peer peer, byte[] authentication) throws Exception {
         Security.ensureNotNull(peer, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.LOGOUT, peer);
 
         notifyFriendDisconnection(peer.getUsername());
         connectedUsers.remove(peer.getUsername());
     }
 
     @Override
-    public void friendRequest(Peer peer, String username, String authentication) throws Exception {
+    public void friendRequest(Peer peer, String username, byte[] authentication) throws Exception {
         Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.FRIEND_REQUEST, peer, username);
 
         database.friendRequest(peer.getUsername(), username);
     }
 
     @Override
-    public void friendAccept(Peer peer, String username, String authentication) throws Exception{
+    public void friendAccept(Peer peer, String username, byte[] authentication) throws Exception{
         Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.FRIEND_ACCEPT, peer, username);
 
         database.friendAccept(username, peer.getUsername());
     }
 
     @Override
-    public void friendReject(Peer peer, String username, String authentication) throws Exception{
+    public void friendReject(Peer peer, String username, byte[] authentication) throws Exception{
         Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, peer);
+        verifyAuthentication(authentication, Method.FRIEND_REJECT, peer, username);
 
         database.friendReject(username, peer.getUsername());
     }
 
-    private void verifyAuthentication(String authentication, Peer peer) throws Exception {
-        if (!security.decrypt(authentication, peer).equals(AUTHENTICATION_STRING)) {
-            throw new GeneralSecurityException("No se pudo garantizar la seguridad de la comunicación con el usuario " + peer.getUsername());
+    private void verifyAuthentication(byte[] authentication, Server.Method method, Peer client, Object... parameters) throws Exception {
+        byte[] nonce = security.extractNonce(authentication);
+        byte[] encryptedAuthentication = security.removeNonce(authentication);
+
+        byte[] serializedData = Security.serialize(method, parameters);
+        byte[] expectedAuthentication = security.digest(serializedData, nonce);
+        byte[] decryptedAuthentication = security.decrypt(encryptedAuthentication, client);
+
+        if (!Arrays.equals(expectedAuthentication, decryptedAuthentication)) {
+            throw new GeneralSecurityException("Fallo de autenticación en el método " + method + " con el usuario " + client.getUsername());
         }
     }
 
-    private String authenticationCode(Peer client) throws Exception {
-        return security.encrypt(AUTHENTICATION_STRING, client);
+    private byte[] authenticate(Peer.Method method, Peer client, Object... parameters) throws Exception {
+        byte[] nonce = security.generateNonce();
+        byte[] serializedData = Security.serialize(method, parameters);
+        byte[] hashedAuthentication = security.digest(serializedData, nonce);
+        byte[] authenticationCode = security.encrypt(hashedAuthentication, client);
+        return Security.combine(nonce, authenticationCode);
     }
 
     // Avisa a todos los amigos conectados de un usuario de que se acaba de conectar
@@ -159,13 +158,13 @@ public class SecureServer extends UnicastRemoteObject implements Server{
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
 
-            friend.addActiveFriend(user, encryptedKeyForFriend, authenticationCode(friend));
+            friend.addActiveFriend(user, encryptedKeyForFriend, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, friend, user, encryptedKeyForFriend));
             activeFriends.put(friendName, friend);
             encryptedAuthenticationKeys.put(friendName, encryptedKeyForUser);
         }
 
         // Avisa también al usuario recién conectado
-        user.addActiveFriend(activeFriends, encryptedAuthenticationKeys, authenticationCode(user));
+        user.addActiveFriend(activeFriends, encryptedAuthenticationKeys, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, user, activeFriends, encryptedAuthenticationKeys));
     }
 
     // Avisa a todos los amigos conectados de que el usuario se acaba de desconectar
@@ -174,9 +173,10 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         // Se filtra por los usuarios conectados actualmente
         friends.retainAll(connectedUsers.keySet());
 
-        for (String friend : friends) {
-            Peer peer = connectedUsers.get(friend);
-            peer.removeActiveFriend(connectedUsers.get(username), authenticationCode(peer));
+        Peer user = connectedUsers.get(username);
+        for (String friendName : friends) {
+            Peer friend = connectedUsers.get(friendName);
+            friend.removeActiveFriend(user, authenticate(Peer.Method.REMOVE_ACTIVE_FRIEND, friend, user));
         }
     }
 }

@@ -28,4 +28,5 @@ java {
 
 dependencies {
     implementationFromCatalog("guava")
+    implementationFromCatalog("postgresql")
 }

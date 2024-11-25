@@ -4,8 +4,13 @@ import java.rmi.Remote;
 import java.security.PublicKey;
 
 public interface Server extends Remote {
-    /* Cadena de 128 Xs, destinada a ser encriptada y desencriptada para autenticar a los usuarios */
-    String AUTHENTICATION_STRING = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    /* Enumeración con los métodos proporcionados por el servidor, con fines de autenticación */
+    enum Method {
+        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT
+    }
+
+    /* Nombre con el que los servidores se deben registrar en el registro RMI */
+    String RMI_NAME = "m2m.Server";
 
     /**
      * Recibe un saludo de {@code client} para iniciar una comunicación segura con un usuario.
@@ -23,7 +28,7 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void signUp(Peer peer, String password, String authentication) throws Exception;
+    void signUp(Peer peer, String password, byte[] authentication) throws Exception;
 
     /**
      * Intenta iniciar sesión con un usuario ya registrado en el sistema. Método a ser llamado por un peer.
@@ -32,7 +37,7 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void login(Peer peer, String password, String authentication) throws Exception;
+    void login(Peer peer, String password, byte[] authentication) throws Exception;
 
     /**
      * Intenta cerrar la sesión de un usuario conectado. Método a ser llamado por un peer.
@@ -40,7 +45,7 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void logout(Peer peer, String authentication) throws Exception;
+    void logout(Peer peer, byte[] authentication) throws Exception;
 
     /**
      * Envía una solicitud de amistad al usuario con nombre {@code username}, el cual no tiene por qué estar conectado en ese momento. Método a ser llamado por un peer.
@@ -49,7 +54,7 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void friendRequest(Peer peer, String username, String authentication) throws Exception;
+    void friendRequest(Peer peer, String username, byte[] authentication) throws Exception;
 
     /**
      * Acepta la solicitud de amistad enviada por el usuario con nombre {@code username}. Método a ser llamado por un peer.
@@ -58,7 +63,7 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void friendAccept(Peer peer, String username, String authentication) throws Exception;
+    void friendAccept(Peer peer, String username, byte[] authentication) throws Exception;
 
     /**
      * Rechaza la solicitud de amistad enviada por el usuario con nombre {@code username}. Método a ser llamado por un peer.
@@ -67,5 +72,5 @@ public interface Server extends Remote {
      * @param authentication Código de autenticación del usuario.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void friendReject(Peer peer, String username, String authentication) throws Exception;
+    void friendReject(Peer peer, String username, byte[] authentication) throws Exception;
 }

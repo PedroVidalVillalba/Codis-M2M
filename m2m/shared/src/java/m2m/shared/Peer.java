@@ -7,6 +7,11 @@ import java.security.PublicKey;
 import java.util.Map;
 
 public interface Peer extends Remote {
+    /* Enumeración con los métodos proporcionados por el usuario al servidor, con fines de autenticación */
+    enum Method {
+        ADD_ACTIVE_FRIEND, REMOVE_ACTIVE_FRIEND
+    }
+
     /**
      * Devuelve el nombre de usuario del peer asociado a esta referencia remota.
      * @return Nombre de usuario.
@@ -50,7 +55,7 @@ public interface Peer extends Remote {
      * @param authentication Código de autenticación del servidor.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void addActiveFriend(Peer friend, SecretKey encryptedAuthenticationKey, String authentication) throws Exception;
+    void addActiveFriend(Peer friend, SecretKey encryptedAuthenticationKey, byte[] authentication) throws Exception;
 
     /**
      * Añade un conjunto de amigos a los amigos en línea. Método a ser llamado por un servidor.
@@ -59,7 +64,7 @@ public interface Peer extends Remote {
      * @param authentication Código de autenticación del servidor.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void addActiveFriend(Map<String, Peer> friends, Map<String, SecretKey> encryptedAuthenticationKeys, String authentication) throws Exception;
+    void addActiveFriend(Map<String, Peer> friends, Map<String, SecretKey> encryptedAuthenticationKeys, byte[] authentication) throws Exception;
 
     /**
      * Elimina un amigo de los amigos en línea. Método a ser llamado por un servidor.
@@ -67,5 +72,5 @@ public interface Peer extends Remote {
      * @param authentication Código de autenticación del servidor.
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
-    void removeActiveFriend(Peer friend, String authentication) throws Exception;
+    void removeActiveFriend(Peer friend, byte[] authentication) throws Exception;
 }
