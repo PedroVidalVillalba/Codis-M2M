@@ -171,6 +171,11 @@ public class Security {
         keys.put(remote, secretKey);
     }
 
+    public synchronized void removeSecretKey(Remote remote) {
+        ensureNotNull(remote);
+        keys.remove(remote);
+    }
+
     public synchronized SecretKey getSecretKey(Remote remote) throws GeneralSecurityException {
         ensureNotNull(remote);
         SecretKey key = keys.get(remote);

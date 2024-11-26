@@ -150,6 +150,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         activeFriends.remove(friendName);
         authenticationKeys.remove(friendName);
         chats.remove(friendName);
+        security.removeSecretKey(friend);
     }
 
     private void verifyServerAuthentication(byte[] authentication, Peer.Method method, Object... parameters) throws Exception {

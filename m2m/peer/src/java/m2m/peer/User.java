@@ -111,6 +111,14 @@ public class User {
         server.friendReject(this.reference, friend, authenticate(Server.Method.FRIEND_REJECT, friend));
     }
 
+    public void removeFriendship(String friend) throws Exception {
+        server.friendRemove(this.reference, friend, authenticate(Server.Method.FRIEND_REMOVE, friend));
+    }
+
+    public List<String> searchUsers(String pattern) throws Exception {
+        return server.searchUsers(this.reference, pattern, authenticate(Server.Method.SEARCH_USERS, pattern));
+    }
+
     /* Métodos privados que facilitan la lógica del código */
     private static AuthenticatedServer findServer() throws Exception {
         try (InputStream inputStream = User.class.getResourceAsStream(TRUSTED_SERVERS)) {

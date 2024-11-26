@@ -28,9 +28,9 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         this.privateKey = Security.loadPrivateKey(privateKeyPath);
     }
 
-    public Map<String, Peer> getConnectedUsers() {
+    /* public Map<String, Peer> getConnectedUsers() {
         return connectedUsers;
-    }
+    }*/
 
     @Override
     public void greet(Peer client, PublicKey clientPublicKey, byte[] clientNonce) throws Exception {
@@ -98,28 +98,65 @@ public class SecureServer extends UnicastRemoteObject implements Server{
     }
 
     @Override
-    public void friendRequest(Peer peer, String username, byte[] authentication) throws Exception {
-        Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, Method.FRIEND_REQUEST, peer, username);
+    public void friendRequest(Peer user, String friendName, byte[] authentication) throws Exception {
+        Security.ensureNotNull(user, friendName, authentication);
+        verifyAuthentication(authentication, Method.FRIEND_REQUEST, user, friendName);
 
-        database.friendRequest(peer.getUsername(), username);
+        database.friendRequest(user.getUsername(), friendName);
     }
 
     @Override
-    public void friendAccept(Peer peer, String username, byte[] authentication) throws Exception{
-        Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, Method.FRIEND_ACCEPT, peer, username);
+    public void friendAccept(Peer user, String friendName, byte[] authentication) throws Exception {
+        Security.ensureNotNull(user, friendName, authentication);
+        verifyAuthentication(authentication, Method.FRIEND_ACCEPT, user, friendName);
 
-        database.friendAccept(username, peer.getUsername());
+        database.friendAccept(friendName, user.getUsername());
+
+        // Si el nuevo amigo está conectado, se notifica a ambos que están conectados
+        Peer friend = connectedUsers.get(friendName);
+        if(friend != null) {
+            SecretKey authenticationKey = security.generateAuthenticationKey();
+            SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
+            SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
+
+            friend.addActiveFriend(user, encryptedKeyForFriend, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, friend, user, encryptedKeyForFriend));
+            user.addActiveFriend(friend, encryptedKeyForUser, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, user, friend, encryptedKeyForUser));
+        }
     }
 
     @Override
-    public void friendReject(Peer peer, String username, byte[] authentication) throws Exception{
-        Security.ensureNotNull(peer, username, authentication);
-        verifyAuthentication(authentication, Method.FRIEND_REJECT, peer, username);
+    public void friendReject(Peer user, String friendName, byte[] authentication) throws Exception {
+        Security.ensureNotNull(user, friendName, authentication);
+        verifyAuthentication(authentication, Method.FRIEND_REJECT, user, friendName);
 
-        database.friendReject(username, peer.getUsername());
+        database.friendReject(friendName, user.getUsername());
     }
+
+    @Override
+    public void friendRemove(Peer user, String friendName, byte[] authentication) throws Exception {
+        Security.ensureNotNull(user, friendName, authentication);
+        verifyAuthentication(authentication, Method.FRIEND_REMOVE, user, friendName);
+
+        database.friendRemove(user.getUsername(), friendName);
+
+        // Si el amigo está conectado, se le quita de la lista de amigos activos
+        Peer friend = connectedUsers.get(friendName);
+        if(friend != null) {
+            friend.removeActiveFriend(user, authenticate(Peer.Method.REMOVE_ACTIVE_FRIEND, friend, user));
+            user.removeActiveFriend(friend, authenticate(Peer.Method.REMOVE_ACTIVE_FRIEND, user, friend));
+        }
+    }
+
+    @Override
+    public List<String> searchUsers(Peer peer, String pattern, byte[] authentication) throws Exception {
+        Security.ensureNotNull(peer, pattern, authentication);
+        verifyAuthentication(authentication, Method.SEARCH_USERS, peer, pattern);
+
+        return database.searchUsers(pattern);
+    }
+
+
+
 
     private void verifyAuthentication(byte[] authentication, Server.Method method, Peer client, Object... parameters) throws Exception {
         byte[] nonce = security.extractNonce(authentication);
