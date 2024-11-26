@@ -7,11 +7,13 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 public class DataBase {
     private static DataBase currentDB;
     private static Connection connection;
+    private final static int MIN_USERNAME_LENGTH = 3;
 
     public static final String CONFIGURATION_FILE = "/database.properties";
 
@@ -103,6 +105,11 @@ public class DataBase {
 
     // Registro de un nuevo usuario
     public void registerUser(String username, byte[] password) throws SQLException {
+        // Comprobación de que la longitud del nombre es correcta
+        if(username.length() < MIN_USERNAME_LENGTH) {
+            throw new SQLException("El nombre de usuario " + username + " es demasiado corto. La longitud mínima es " + MIN_USERNAME_LENGTH + " caracteres");
+        }
+
         ArrayList<String> users = getUsers();
         // Comprobación de que no existe un usuario registrado con el mismo nombre
         if (users.contains(username)) {
@@ -144,6 +151,12 @@ public class DataBase {
             throw new SQLException("El usuario " + receiverUsername + " no está registrado");
         }
 
+        ArrayList<String> friends = getFriends(senderUsername);
+        // Comprobación de que no sean ya amigos
+        if(friends.contains(receiverUsername)) {
+            throw new SQLException("Los usuarios " + senderUsername + " y " + receiverUsername + " ya son amigos");
+        }
+
         @Language("SQL")
         String query = "INSERT INTO friends (sender, receiver, state) VALUES (?, ?, 'pending')";
 
@@ -152,12 +165,6 @@ public class DataBase {
 
     // Aceptación de una solicitud de amistad
     public void friendAccept(String senderUsername, String receiverUsername) throws SQLException {
-        ArrayList<String> users = getUsers();
-        // Comprobación de que existe un usuario registrado con el mismo nombre
-        if(!users.contains(receiverUsername)) {
-            throw new SQLException("El usuario " + receiverUsername + " no está registrado");
-        }
-
         @Language("SQL")
         String query = "UPDATE friends SET state = 'accepted' " +
                 "WHERE sender = ? AND receiver = ? AND state = 'pending'";
@@ -169,12 +176,6 @@ public class DataBase {
 
     // Rechazo de una solicitud de amistad
     public void friendReject(String senderUsername, String receiverUsername) throws SQLException {
-        ArrayList<String> users = getUsers();
-        // Comprobación de que existe un usuario registrado con el mismo nombre
-        if(!users.contains(receiverUsername)) {
-            throw new SQLException("El usuario " + receiverUsername + " no está registrado");
-        }
-
         @Language("SQL")
         String query = "DELETE FROM friends " +
                 "WHERE sender = ? AND receiver = ? AND state = 'pending'";
@@ -182,6 +183,36 @@ public class DataBase {
         if (executeUpdate(query, senderUsername, receiverUsername) == 0) {
             throw new SQLException("No existía ninguna solicitud de amistad pendiente de " + senderUsername + " a " + receiverUsername);
         }
+    }
+
+    // Eliminación de un amigo
+    public void friendRemove(String username, String friendName) throws SQLException {
+        @Language("SQL")
+        String query = "DELETE FROM friends " +
+                "WHERE state = 'accepted' AND ( (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?) )";
+        if (executeUpdate(query, username, friendName, friendName, username) == 0) {
+            throw new SQLException("Los usuarios " + username + " y " + friendName + " no eran amigos");
+        }
+    }
+
+    // Búsqueda de usuarios para enviar solicitudes de amistad
+    public List<String> searchUsers(String pattern) throws SQLException {
+        ArrayList<String> users = new ArrayList<>();
+        // Si el patrón no tiene la longitud mínima, no se devuelve nada
+        if(pattern.length() < MIN_USERNAME_LENGTH) {
+            throw new SQLException("La longitud mínima para la búsqueda es de " + MIN_USERNAME_LENGTH + " caracteres");
+        }
+
+        @Language("SQL")
+        String query = "SELECT * FROM users WHERE username LIKE ?";
+        try (PreparedStatement preparedStatement = prepareQuery(query, "%" + pattern + "%");
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) { /* Asegurarse de que el resultado tiene por lo menos una fila */
+                users.add(resultSet.getString("username"));
+            }
+            return users;
+        }
+
     }
 
     private int executeUpdate(String query, String... missingFields) throws SQLException {

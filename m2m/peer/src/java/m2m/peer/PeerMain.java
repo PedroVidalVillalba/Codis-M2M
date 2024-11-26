@@ -29,6 +29,14 @@ public class PeerMain {
         }
 
         try {
+            System.out.print("Alice busca usuarios \"bo\": ");
+            System.out.println(alice.searchUsers("bo"));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Alice busca usuarios \"bob\": " + alice.searchUsers("bob"));
+
+        try {
             System.out.println("Solicitud de amistad de Alice a Bob");
             alice.requestFriendship("bob");
         } catch (Exception e) {
@@ -62,6 +70,26 @@ public class PeerMain {
 
         System.out.println("Chat de Bob a Alice:");
         printChat(bob.getChat("alice"));
+
+        System.out.println("\nBob se enfada con Alice porque no le responde y elimina su amistad");
+        bob.removeFriendship("alice");
+        System.out.print("Alice también elimina su amistad: ");
+        try {
+            alice.removeFriendship("bob");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        System.out.println("Bob se arrepiente y vuelve a enviarle una solicitud de amistad");
+        bob.requestFriendship("alice");
+        System.out.println("Pero Alice la rechaza");
+        alice.rejectFriendship("bob");
+        try{
+            System.out.print("No se puede rechazar dos veces: ");
+            alice.rejectFriendship("bob");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 
 
         alice.logout();
