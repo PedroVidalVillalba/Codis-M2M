@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m2m.peer.gui.ChatsController">
+
+    <!-- Barra superior con botones -->
+    <top>
+        <ToolBar>
+            <Button onAction="#handleFriends" text="󰣐"/>
+            <Button onAction="#handleLogout" text="󰠜" />
+        </ToolBar>
+    </top>
+
+    <!-- Contenido principal -->
+    <center>
+        <SplitPane dividerPositions="0.3">
+
+            <!-- Lista de amigos -->
+            <VBox prefWidth="250" spacing="10">
+                <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Amigos" />
+                <ListView fx:id="friendList" prefHeight="528.0" prefWidth="236.0" VBox.vgrow="ALWAYS" />
+            </VBox>
+
+            <!-- Conversación del amigo seleccionado -->
+            <VBox prefWidth="550" spacing="10">
+                <!-- Título del chat -->
+                <Label fx:id="chatTitle" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 5;" text="Selecciona un amigo para chatear" />
+
+                <!-- Mensajes -->
+                <ListView fx:id="messageList" VBox.vgrow="ALWAYS" />
+
+                <!-- Campo de texto y botón para enviar -->
+                <HBox spacing="10">
+                    <TextField fx:id="messageField" promptText="Escribe un mensaje..." HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleSendMessage" text="Enviar" />
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
+</BorderPane>

@@ -1,7 +1,6 @@
 package m2m.peer.gui;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -14,34 +13,55 @@ public class LoginController {
     @FXML
     private PasswordField passwordField;
     @FXML
-    private Button loginButton;
-    @FXML
-    private Button signupButton;
-    @FXML
     private Label errorLabel;
 
     @FXML
     private void initialize() {
         errorLabel.setVisible(false);
-
-        // Botón iniciar sesión
-        loginButton.setOnAction(event -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
-            try {
-                User user = new User(username, password);
-                PeerMain.setUser(user);
-                PeerMain.setRoot("gui/Chats.fxml");
-            } catch (Exception e) {
-                errorLabel.setText(e.getMessage());
-                errorLabel.setVisible(true);
-            }
-
-        });
-
-        // Botón registrarse
-        signupButton.setOnAction(event -> {
-
-        });
     }
+
+    @FXML
+    private void login() {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("Los campos no pueden estar vacíos.");
+            errorLabel.setVisible(true);
+            return;
+        }
+
+        try {
+            User user = new User(username, password);
+            user.login();
+            PeerMain.setUser(user);
+            PeerMain.setRoot("gui/Chats.fxml");
+        } catch (Exception e) {
+            errorLabel.setText(e.getMessage());
+            errorLabel.setVisible(true);
+        }
+    }
+
+    @FXML
+    private void signUp() {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("Los campos no pueden estar vacíos.");
+            errorLabel.setVisible(true);
+            return;
+        }
+
+        try {
+            User user = new User(username, password);
+            user.signUp();
+            PeerMain.setUser(user);
+            PeerMain.setRoot("gui/Chats.fxml");
+        } catch (Exception e) {
+            errorLabel.setText(e.getMessage());
+            errorLabel.setVisible(true);
+        }
+    }
+
 }

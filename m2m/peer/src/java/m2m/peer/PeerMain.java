@@ -16,8 +16,7 @@ public class PeerMain extends Application {
 
     @Override
     public void start(Stage stage) throws Exception{
-
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/Login.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("gui/Login.fxml"));
         Scene scene = new Scene(loader.load());
 
         primaryStage = stage;
@@ -47,5 +46,4 @@ public class PeerMain extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 }
