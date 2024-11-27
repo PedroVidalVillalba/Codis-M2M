@@ -1,5 +1,6 @@
 package m2m.server;
 
+import m2m.shared.Security;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
@@ -104,7 +105,7 @@ public class DataBase {
 
 
     // Registro de un nuevo usuario
-    public void registerUser(String username, byte[] password) throws SQLException {
+    public void registerUser(String username, byte[] password) throws Exception {
         // Comprobación de que la longitud del nombre es correcta
         if(username.length() < MIN_USERNAME_LENGTH) {
             throw new SQLException("El nombre de usuario " + username + " es demasiado corto. La longitud mínima es " + MIN_USERNAME_LENGTH + " caracteres");
@@ -117,24 +118,30 @@ public class DataBase {
         }
 
         @Language("SQL")
-        String query = "INSERT INTO users (username, password) VALUES (?, ?)";
+        String query = "INSERT INTO users (username, password, salt) VALUES (?, ?, ?)";
+
+        byte[] salt = Security.generateNonce();
+        byte[] hashedPassword = Security.digest(password, salt);
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, username);
-            preparedStatement.setBytes(2, password);
+            preparedStatement.setBytes(2, hashedPassword);
+            preparedStatement.setBytes(3, salt);
             preparedStatement.executeUpdate();
         }
     }
 
     // Inicio de sesión de un usuario
-    public void loginUser(String username, byte[] password) throws SQLException {
+    public void loginUser(String username, byte[] password) throws Exception {
         @Language("SQL")
-        String query = "SELECT password FROM users WHERE username = ?";
+        String query = "SELECT password, salt FROM users WHERE username = ?";
 
         try (PreparedStatement preparedStatement = prepareQuery(query, username);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             if (resultSet.next()) { /* Asegurarse de que el resultado tiene por lo menos una fila */
-                if (!Arrays.equals(password, resultSet.getBytes("password"))) {
+                byte[] salt = resultSet.getBytes("salt");
+                byte[] hashedPassword = Security.digest(password, salt);
+                if (!Arrays.equals(hashedPassword, resultSet.getBytes("password"))) {
                     throw new SQLException("La contraseña del usuario " + username + " es incorrecta");
                 }
             } else {

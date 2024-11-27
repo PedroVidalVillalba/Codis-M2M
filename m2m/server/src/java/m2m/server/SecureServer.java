@@ -81,8 +81,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         if (connectedUsers.containsKey(username)) {
             throw new Exception("El usuario ya ha iniciado sesión desde otro lugar");
         }
-
-        byte[] rawPassword = Base64.getDecoder().decode(password);
+        byte[] rawPassword = Base64.getDecoder().decode(security.decrypt(password, peer));
         database.loginUser(username, rawPassword);
 
         connectedUsers.put(username, peer);

@@ -40,7 +40,7 @@ public class Security {
     }
 
     /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
-    public byte[] encrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
+    public static byte[] encrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
         ensureNotNull(data, key);
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
@@ -71,7 +71,7 @@ public class Security {
     }
 
     /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
-    public byte[] decrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
+    public static byte[] decrypt(byte[] data, SecretKey key) throws GeneralSecurityException {
         ensureNotNull(data, key);
         Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
 
@@ -103,21 +103,21 @@ public class Security {
         return decrypt(data, key);
     }
 
-    public String digest(String data, String salt) throws GeneralSecurityException {
+    public static String digest(String data, String salt) throws GeneralSecurityException {
         ensureNotNull(data, salt);
         byte[] hash = digest(data.getBytes(), salt.getBytes());
         return Base64.getEncoder().encodeToString(hash);
     }
 
     /* Método digest de bajo nivel actuando sobre arrays de bytes directamente */
-    public byte[] digest(byte[] data, byte[] salt) throws GeneralSecurityException {
+    public static byte[] digest(byte[] data, byte[] salt) throws GeneralSecurityException {
         ensureNotNull(data, salt);
         MessageDigest digest = MessageDigest.getInstance(SHA3_ALGORITHM);
         digest.update(salt);
         return digest.digest(data);
     }
 
-    public Ephemeral generateEphemeral() throws GeneralSecurityException {
+    public static Ephemeral generateEphemeral() throws GeneralSecurityException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance(KEY_EXCHANGE_ALGORITHM);
         KeyPair keyPair = keyGen.generateKeyPair();
         byte[] nonce = generateNonce();
@@ -142,7 +142,7 @@ public class Security {
         return ephemeral;
     }
 
-    public byte[] computeSharedSecret(PrivateKey privateKey, PublicKey publicKey) throws GeneralSecurityException {
+    public static byte[] computeSharedSecret(PrivateKey privateKey, PublicKey publicKey) throws GeneralSecurityException {
         ensureNotNull(privateKey, publicKey);
 
         KeyAgreement keyAgreement = KeyAgreement.getInstance(KEY_EXCHANGE_ALGORITHM);
@@ -151,7 +151,7 @@ public class Security {
         return keyAgreement.generateSecret();
     }
 
-    public SecretKey deriveSecretKey(byte[] sharedSecret, byte[] salt) throws GeneralSecurityException {
+    public static SecretKey deriveSecretKey(byte[] sharedSecret, byte[] salt) throws GeneralSecurityException {
         ensureNotNull(sharedSecret, salt);
 
         /* HKDF (HMAC-based Key Derivation Function) para derivar una clave para AES */
@@ -211,7 +211,7 @@ public class Security {
         }
     }
 
-    public byte[] sign(byte[] data, PrivateKey privateKey) throws GeneralSecurityException {
+    public static byte[] sign(byte[] data, PrivateKey privateKey) throws GeneralSecurityException {
         ensureNotNull(data, privateKey);
         Signature signature = Signature.getInstance(SIGN_ALGORITHM);
         signature.initSign(privateKey);
@@ -219,7 +219,7 @@ public class Security {
         return signature.sign();
     }
 
-    public boolean verifySignature(byte[] data, byte[] signedData, PublicKey publicKey) throws GeneralSecurityException {
+    public static boolean verifySignature(byte[] data, byte[] signedData, PublicKey publicKey) throws GeneralSecurityException {
         ensureNotNull(data, signedData, publicKey);
         Signature signature = Signature.getInstance(SIGN_ALGORITHM);
         signature.initVerify(publicKey);
@@ -227,27 +227,26 @@ public class Security {
         return signature.verify(signedData);
     }
 
-    public SecretKey generateAuthenticationKey() throws GeneralSecurityException {
+    public static SecretKey generateAuthenticationKey() throws GeneralSecurityException {
         KeyGenerator generator = KeyGenerator.getInstance(AES_ALGORITHM);
         SecureRandom random = SecureRandom.getInstanceStrong();
         generator.init(AES_KEY_SIZE, random);
         return generator.generateKey();
     }
 
-
-    public byte[] generateNonce() {
+    public static byte[] generateNonce() {
         byte[] nonce = new byte[NONCE_LENGTH];
         new SecureRandom().nextBytes(nonce);
         return nonce;
     }
 
-    public byte[] extractNonce(byte[] combinedData) {
+    public static byte[] extractNonce(byte[] combinedData) {
         byte[] nonce = new byte[NONCE_LENGTH];
         System.arraycopy(combinedData, 0, nonce, 0, NONCE_LENGTH);
         return nonce;
     }
 
-    public byte[] removeNonce(byte[] combinedData) {
+    public static byte[] removeNonce(byte[] combinedData) {
         byte[] data = new byte[combinedData.length - NONCE_LENGTH];
         System.arraycopy(combinedData, NONCE_LENGTH, data, 0, data.length);
         return data;
@@ -286,19 +285,19 @@ public class Security {
     }
 
     /* Métodos privados */
-    private byte[] generateIV() {
+    private static byte[] generateIV() {
         byte[] iv = new byte[GCM_IV_LENGTH];
         new SecureRandom().nextBytes(iv);
         return iv;
     }
 
-    private byte[] extractIV(byte[] combinedData) {
+    private static byte[] extractIV(byte[] combinedData) {
         byte[] iv = new byte[GCM_IV_LENGTH];
         System.arraycopy(combinedData, 0, iv, 0, GCM_IV_LENGTH);
         return iv;
     }
 
-    private byte[] extractEncryptedData(byte[] combinedData) {
+    private static byte[] extractEncryptedData(byte[] combinedData) {
         byte[] encryptedData = new byte[combinedData.length - GCM_IV_LENGTH];
         System.arraycopy(combinedData, GCM_IV_LENGTH, encryptedData, 0, encryptedData.length);
         return encryptedData;
@@ -313,7 +312,7 @@ public class Security {
         return Base64.getDecoder().decode(pemContent);
     }
 
-    private byte[] hkdfExpand(byte[] prk) throws GeneralSecurityException {
+    private static byte[] hkdfExpand(byte[] prk) throws GeneralSecurityException {
         Mac hmac = Mac.getInstance(HMAC_SHA3_ALGORITHM);
         hmac.init(new SecretKeySpec(prk, HMAC_SHA3_ALGORITHM));
 
