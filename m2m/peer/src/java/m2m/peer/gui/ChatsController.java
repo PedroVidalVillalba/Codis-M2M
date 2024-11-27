@@ -16,11 +16,7 @@ public class ChatsController {
 
     @FXML
     private void initialize() {
-        // Agregar chats de ejemplo
-        chatList.getItems().addAll("Amigo 1", "Amigo 2", "Amigo 3");
 
-        // Manejar selección de chat
-        chatList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> loadChat(newVal));
     }
 
     private void loadChat(String friendName) {
