@@ -1,5 +1,8 @@
 package m2m.peer;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import m2m.shared.Peer;
 import m2m.shared.Security;
 import m2m.shared.Security.Ephemeral;
@@ -33,16 +36,16 @@ public class User {
     private final Peer reference;
     private final Security security;
     private final Server server;
-    private final Map<String, Peer> activeFriends;    /* Pares (username, reference) */
-    private final Map<String, List<Message>> chats;
+    private final ObservableMap<String, Peer> activeFriends;    /* Pares (username, reference) */
+    private final ObservableMap<String, ObservableList<Message>> chats;
 
     private record AuthenticatedServer(Server server, PublicKey serverKey) {}
 
     public User(String username, String password) throws Exception {
         this.security = new Security();
-        this.activeFriends = new HashMap<>();
+        this.activeFriends = FXCollections.observableHashMap();
         Map<String, SecretKey> authenticationKeys = new HashMap<>();
-        this.chats = new HashMap<>();
+        this.chats = FXCollections.observableHashMap();
         AuthenticatedServer authenticatedServer = findServer();
         this.server = authenticatedServer.server();
         PublicKey serverPublicKey = authenticatedServer.serverKey();
@@ -71,7 +74,15 @@ public class User {
         return server;
     }
 
-    public List<Message> getChat(String friend) {
+    public ObservableMap<String, Peer> getActiveFriends() {
+        return activeFriends;
+    }
+
+    public ObservableMap<String, ObservableList<Message>> getChats() {
+        return chats;
+    }
+
+    public ObservableList<Message> getChat(String friend) {
         return chats.get(friend);
     }
 

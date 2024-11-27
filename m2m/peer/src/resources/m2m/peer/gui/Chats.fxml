@@ -8,8 +8,8 @@
     <!-- Barra superior con botones -->
     <top>
         <ToolBar>
-            <Button onAction="#handleFriends" text="󰣐"/>
-            <Button onAction="#handleLogout" text="󰠜" />
+            <Button fx:id="friendsButton" onAction="#handleFriends" />
+            <Button fx:id="logoutButton" onAction="#handleLogout" />
         </ToolBar>
     </top>
 
@@ -19,17 +19,23 @@
 
             <!-- Lista de amigos -->
             <VBox prefWidth="250" spacing="10">
-                <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Amigos" />
-                <ListView fx:id="friendList" prefHeight="528.0" prefWidth="236.0" VBox.vgrow="ALWAYS" />
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-alignment: center; -fx-alignment: center;" text="Amigos" />
+                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+                    <ListView fx:id="friendsList" prefHeight="525.0" prefWidth="236.0" />
+                </ScrollPane>
             </VBox>
+
 
             <!-- Conversación del amigo seleccionado -->
             <VBox prefWidth="550" spacing="10">
-                <!-- Título del chat -->
-                <Label fx:id="chatTitle" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 5;" text="Selecciona un amigo para chatear" />
+                <!-- Mensajes recibidos y enviados -->
+                <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
+                    <!-- Mensajes recibidos -->
+                    <ListView fx:id="receivedMessages" />
 
-                <!-- Mensajes -->
-                <ListView fx:id="messageList" VBox.vgrow="ALWAYS" />
+                    <!-- Mensajes enviados -->
+                    <ListView fx:id="sentMessages" />
+                </SplitPane>
 
                 <!-- Campo de texto y botón para enviar -->
                 <HBox spacing="10">

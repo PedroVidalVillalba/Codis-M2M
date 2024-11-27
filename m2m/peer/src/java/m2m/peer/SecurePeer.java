@@ -1,5 +1,7 @@
 package m2m.peer;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import m2m.shared.Peer;
 import m2m.shared.Security;
 import m2m.shared.Security.Ephemeral;
@@ -19,11 +21,11 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     private final Security security;
     private final Map<String, Peer> activeFriends;
     private final Map<String, SecretKey> authenticationKeys;
-    private final Map<String, List<Message>> chats;
+    private final Map<String, ObservableList<Message>> chats;
     private final Server server;
     private final PublicKey serverPublicKey;
 
-    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, List<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
+    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, ObservableList<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
         super();
         Security.ensureNotNull(username, security, activeFriends, authenticationKeys, server, serverPublicKey);
         this.username = username;
@@ -124,7 +126,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKey, server);
         activeFriends.put(friendName, friend);
         authenticationKeys.put(friendName, authenticationKey);
-        chats.put(friendName, new ArrayList<>());
+        chats.put(friendName, FXCollections.observableArrayList());
     }
 
     @Override
@@ -137,7 +139,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         for (String friendName : activeFriends.keySet()) {
             SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKeys.get(friendName), server);
             authenticationKeys.put(friendName, authenticationKey);
-            chats.put(friendName, new ArrayList<>());
+            chats.put(friendName, FXCollections.observableArrayList());
         }
     }
 

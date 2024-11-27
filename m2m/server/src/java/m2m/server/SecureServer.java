@@ -78,6 +78,10 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         verifyAuthentication(authentication, Method.LOGIN, peer, password);
 
         String username = peer.getUsername();
+        if (connectedUsers.containsKey(username)) {
+            throw new Exception("El usuario ya ha iniciado sesión desde otro lugar");
+        }
+
         byte[] rawPassword = Base64.getDecoder().decode(password);
         database.loginUser(username, rawPassword);
 
