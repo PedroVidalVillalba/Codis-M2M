@@ -7,8 +7,10 @@ import java.rmi.registry.Registry;
 import java.rmi.RemoteException;
 
 public class ServerMain {
+    public static final int RMI_PORT = 1099;
+
     public static void main(String[] args) throws Exception {
-        Registry registry = startRegistry(1099);
+        Registry registry = startRegistry(RMI_PORT);
         Server server = new SecureServer();
         registry.rebind(Server.RMI_NAME, server);
 
@@ -18,6 +20,8 @@ public class ServerMain {
             System.out.println("\t" + bound);
         }
         System.out.println("Press enter to exit...");
+        Runtime.getRuntime().exec(new String[] {"notify-send", Server.RMI_NAME + " iniciado en el puerto " + RMI_PORT});
+
         System.in.read();
         registry.unbind(Server.RMI_NAME);
         System.out.println("Server stopped");

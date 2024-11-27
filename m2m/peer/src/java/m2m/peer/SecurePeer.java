@@ -46,27 +46,27 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         Security.ensureNotNull(greeter, greeterPublicKey, greeterNonce);
 
         /* Generar una clave efímera y un número aleatorio de un solo uso */
-        Ephemeral ephemeral = security.generateEphemeral();
+        Ephemeral ephemeral = Security.generateEphemeral();
         PrivateKey ephemeralPrivateKey = ephemeral.privateKey();
         PublicKey ephemeralPublicKey = ephemeral.publicKey();
         byte[] nonce = ephemeral.nonce();
 
         /* Calcular el secreto compartido usando la clave pública de quien inicia el saludo */
-        byte[] sharedSecret = security.computeSharedSecret(ephemeralPrivateKey, greeterPublicKey);
+        byte[] sharedSecret = Security.computeSharedSecret(ephemeralPrivateKey, greeterPublicKey);
         /* Combinar la información pública usada para verificar que el saludo fue correcto */
         byte[] handshakeData = Security.combine(greeterNonce, nonce, greeterPublicKey.getEncoded(), ephemeralPublicKey.getEncoded());
 
         /* Cifrar la información del saludo con la clave compartida por el servidor para autenticarse */
         SecretKey authenticationKey = authenticationKeys.get(greeter.getUsername());
-        byte[] challenge = security.digest(handshakeData, Security.combine(greeter.getUsername().getBytes(), username.getBytes()));
-        byte[] signature = security.encrypt(challenge, authenticationKey);
+        byte[] challenge = Security.digest(handshakeData, Security.combine(greeter.getUsername().getBytes(), username.getBytes()));
+        byte[] signature = Security.encrypt(challenge, authenticationKey);
 
         /* Generar la clave compartida para la encriptación de la comunicación */
-        SecretKey secretKey = security.deriveSecretKey(sharedSecret, handshakeData);
+        SecretKey secretKey = Security.deriveSecretKey(sharedSecret, handshakeData);
 
         /* Enviar la clave pública del servidor, el nonce utilizado y la autenticación cifrada, lo que también vale para confirmar que el servidor tiene la clave */
-        byte[] greeterResponse = greeter.greetBack(this, ephemeralPublicKey, nonce, security.encrypt(signature, secretKey));
-        if (!Arrays.equals(security.digest(handshakeData, signature), security.decrypt(greeterResponse, authenticationKey))) {
+        byte[] greeterResponse = greeter.greetBack(this, ephemeralPublicKey, nonce, Security.encrypt(signature, secretKey));
+        if (!Arrays.equals(Security.digest(handshakeData, signature), Security.decrypt(greeterResponse, authenticationKey))) {
             throw new GeneralSecurityException("Falló la verificación de la respuesta del peer durante el saludo.");
         }
 
@@ -85,15 +85,15 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         byte[] nonce = ephemeral.nonce();
 
         /* Calcular el secreto compartido usando la clave pública de quien responde al saludo */
-        byte[] sharedSecret = security.computeSharedSecret(privateKey, greetedPublicKey);
+        byte[] sharedSecret = Security.computeSharedSecret(privateKey, greetedPublicKey);
         /* Combinar la información pública usada para verificar que el saludo fue correcto */
         byte[] handshakeData = Security.combine(nonce, greetedNonce, publicKey.getEncoded(), greetedPublicKey.getEncoded());
 
         /* Generar la clave compartida para la encriptación de la comunicación */
-        SecretKey secretKey = security.deriveSecretKey(sharedSecret, handshakeData);
+        SecretKey secretKey = Security.deriveSecretKey(sharedSecret, handshakeData);
 
         /* Autenticar la identidad del iniciador de la conversación, así como confirmar que compartimos la misma clave secreta */
-        byte[] signature = security.decrypt(challenge, secretKey);
+        byte[] signature = Security.decrypt(challenge, secretKey);
         authenticateRemote(greeted, handshakeData, signature);
 
         security.storeSecretKey(greeted, secretKey);
@@ -154,11 +154,11 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     }
 
     private void verifyServerAuthentication(byte[] authentication, Peer.Method method, Object... parameters) throws Exception {
-        byte[] nonce = security.extractNonce(authentication);
-        byte[] encryptedAuthentication = security.removeNonce(authentication);
+        byte[] nonce = Security.extractNonce(authentication);
+        byte[] encryptedAuthentication = Security.removeNonce(authentication);
 
         byte[] serializedData = Security.serialize(method, parameters);
-        byte[] expectedAuthentication = security.digest(serializedData, nonce);
+        byte[] expectedAuthentication = Security.digest(serializedData, nonce);
         byte[] decryptedAuthentication = security.decrypt(encryptedAuthentication, server);
 
         if (!Arrays.equals(expectedAuthentication, decryptedAuthentication)) {
@@ -168,14 +168,14 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
 
     private void authenticateRemote(Remote remote, byte[] handshakeData, byte[] signature) throws Exception {
         if (remote instanceof Server) {
-            if (!security.verifySignature(handshakeData, signature, serverPublicKey)) {
+            if (!Security.verifySignature(handshakeData, signature, serverPublicKey)) {
                 throw new GeneralSecurityException("No se pudo verificar la autenticidad del servidor durante el saludo");
             }
         } else if (remote instanceof Peer peer) {
             String peerName = peer.getUsername();
             SecretKey authenticationKey = authenticationKeys.get(peerName);
-            byte[] expectedChallenge = security.digest(handshakeData, Security.combine(username.getBytes(), peerName.getBytes()));
-            if (!Arrays.equals(expectedChallenge, security.decrypt(signature, authenticationKey))) {
+            byte[] expectedChallenge = Security.digest(handshakeData, Security.combine(username.getBytes(), peerName.getBytes()));
+            if (!Arrays.equals(expectedChallenge, Security.decrypt(signature, authenticationKey))) {
                 throw new GeneralSecurityException("No se pudo verificar la autenticidad del peer " + peerName + " durante el saludo");
             }
         }
@@ -183,10 +183,10 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
 
     private byte[] generateResponse(Remote remote, byte[] handshakeData, byte[] signature, SecretKey secretKey) throws Exception {
         if (remote instanceof Server) {
-            return security.encrypt(security.digest(handshakeData, signature), secretKey);
+            return Security.encrypt(Security.digest(handshakeData, signature), secretKey);
         } else if (remote instanceof Peer peer) {
             SecretKey authenticationKey = authenticationKeys.get(peer.getUsername());
-            return security.encrypt(security.digest(handshakeData, signature), authenticationKey);
+            return Security.encrypt(Security.digest(handshakeData, signature), authenticationKey);
         }
         throw new IllegalArgumentException("No se pudo determinar el tipo del objeto remoto para el que generar la respuesta");
     }

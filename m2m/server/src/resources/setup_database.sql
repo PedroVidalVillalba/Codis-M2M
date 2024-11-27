@@ -29,7 +29,8 @@ BEGIN
     ) THEN
         CREATE TABLE Users (
             username VARCHAR(30) PRIMARY KEY,
-            password BYTEA
+            password BYTEA,
+            salt     BYTEA
         );
     END IF;
 
