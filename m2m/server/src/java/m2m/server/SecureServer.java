@@ -22,8 +22,8 @@ public class SecureServer extends UnicastRemoteObject implements Server{
     public SecureServer() throws Exception {
         super();
         database = DataBase.getCurrentDB();
-        this.connectedUsers = new HashMap<>();
         this.security = new Security();
+        this.connectedUsers = new HashMap<>();
         String privateKeyPath = "/keys/server_private_key_" + InetAddress.getLocalHost().getHostName() + ".pem";
         this.privateKey = Security.loadPrivateKey(privateKeyPath);
     }
@@ -111,7 +111,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
 
         // Si el nuevo amigo está conectado, se notifica a ambos que están conectados
         Peer friend = connectedUsers.get(friendName);
-        if(friend != null) {
+        if (friend != null) {
             SecretKey authenticationKey = security.generateAuthenticationKey();
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
@@ -138,7 +138,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
 
         // Si el amigo está conectado, se le quita de la lista de amigos activos
         Peer friend = connectedUsers.get(friendName);
-        if(friend != null) {
+        if (friend != null) {
             friend.removeActiveFriend(user, authenticate(Peer.Method.REMOVE_ACTIVE_FRIEND, friend, user));
             user.removeActiveFriend(friend, authenticate(Peer.Method.REMOVE_ACTIVE_FRIEND, user, friend));
         }
@@ -152,10 +152,11 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         return database.searchUsers(pattern);
     }
 
-
-
-
     private void verifyAuthentication(byte[] authentication, Server.Method method, Peer client, Object... parameters) throws Exception {
+        if (method.requiresLogin() && !connectedUsers.containsValue(client)) {
+            throw new GeneralSecurityException("Se requiere autenticación del usuario " + client.getUsername() + " para ejecutar el método " + method);
+        }
+
         byte[] nonce = security.extractNonce(authentication);
         byte[] encryptedAuthentication = security.removeNonce(authentication);
 

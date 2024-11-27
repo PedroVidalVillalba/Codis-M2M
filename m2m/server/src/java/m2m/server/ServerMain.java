@@ -17,7 +17,7 @@ public class ServerMain {
         for (String bound : registry.list()) {
             System.out.println("\t" + bound);
         }
-        System.out.println("Press any key to exit...");
+        System.out.println("Press enter to exit...");
         System.in.read();
         registry.unbind(Server.RMI_NAME);
         System.out.println("Server stopped");

@@ -92,9 +92,11 @@ public class User {
     public void signUp() throws Exception {
         server.signUp(this.reference, this.password, authenticate(Server.Method.SIGN_UP, this.password));
     }
+
     public void login() throws Exception {
         server.login(this.reference, this.password, authenticate(Server.Method.LOGIN, this.password));
     }
+
     public void logout() throws Exception {
         server.logout(this.reference, authenticate(Server.Method.LOGOUT));
     }

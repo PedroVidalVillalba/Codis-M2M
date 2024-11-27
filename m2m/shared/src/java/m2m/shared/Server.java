@@ -7,7 +7,23 @@ import java.util.List;
 public interface Server extends Remote {
     /* Enumeración con los métodos proporcionados por el servidor, con fines de autenticación */
     enum Method {
-        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS
+        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS;
+
+        private boolean requiresLogin;
+        static {
+            SIGN_UP.requiresLogin = false;
+            LOGIN.requiresLogin = false;
+            LOGOUT.requiresLogin = true;
+            FRIEND_REQUEST.requiresLogin = true;
+            FRIEND_ACCEPT.requiresLogin = true;
+            FRIEND_REJECT.requiresLogin = true;
+            FRIEND_REMOVE.requiresLogin = true;
+            SEARCH_USERS.requiresLogin = false;
+        }
+        
+        public boolean requiresLogin() {
+            return this.requiresLogin;
+        }
     }
 
     /* Nombre con el que los servidores se deben registrar en el registro RMI */
