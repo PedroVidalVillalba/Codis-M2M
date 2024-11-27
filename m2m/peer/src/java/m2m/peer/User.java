@@ -15,7 +15,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +35,12 @@ public class User {
 
     private final String username;
     private final String password;
-    private final Peer reference;
     private final Security security;
     private final Server server;
     private final ObservableMap<String, Peer> activeFriends;    /* Pares (username, reference) */
     private final ObservableMap<String, ObservableList<Message>> chats;
+    private Peer reference;
+    private Server server;
 
     private record AuthenticatedServer(Server server, PublicKey serverKey) {}
 
@@ -50,11 +53,25 @@ public class User {
         this.server = authenticatedServer.server();
         PublicKey serverPublicKey = authenticatedServer.serverKey();
         this.username = username;
-        this.password = security.digest(password, username);
-        this.reference = new SecurePeer(username, security, activeFriends, authenticationKeys, chats, server, serverPublicKey);
+        this.password = Security.digest(password, username);
 
-        Ephemeral ephemeral = security.generateEphemeral(server);
-        server.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
+        List<AuthenticatedServer> authenticatedServers = findServers();
+        for (AuthenticatedServer authenticatedServer : authenticatedServers) {
+            PublicKey serverPublicKey = authenticatedServer.serverKey();
+            Server server = authenticatedServer.server();
+            Peer reference = new SecurePeer(username, security, activeFriends, authenticationKeys, chats, server, serverPublicKey);
+            Ephemeral ephemeral = security.generateEphemeral(server);
+            try {
+                server.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
+                /* Si fue todo bien, guardamos la información relevante */
+                this.server = server;
+                this.reference = reference;
+                return;
+            } catch (GeneralSecurityException exception) {
+                /* Si no pudimos autenticar a ese servidor, lo intentamos con el siguiente */
+            }
+        }
+        throw new IllegalStateException("No se pudo localizar ningún servidor conocido activo");
     }
 
     /* Getters */
@@ -101,11 +118,13 @@ public class User {
     }
 
     public void signUp() throws Exception {
-        server.signUp(this.reference, this.password, authenticate(Server.Method.SIGN_UP, this.password));
+        String encryptedPassword = security.encrypt(password, server);
+        server.signUp(this.reference, encryptedPassword, authenticate(Server.Method.SIGN_UP, encryptedPassword));
     }
 
     public void login() throws Exception {
-        server.login(this.reference, this.password, authenticate(Server.Method.LOGIN, this.password));
+        String encryptedPassword = security.encrypt(password, server);
+        server.login(this.reference, encryptedPassword, authenticate(Server.Method.LOGIN, encryptedPassword));
     }
 
     public void logout() throws Exception {
@@ -133,7 +152,8 @@ public class User {
     }
 
     /* Métodos privados que facilitan la lógica del código */
-    private static AuthenticatedServer findServer() throws Exception {
+    private static List<AuthenticatedServer> findServers() throws Exception {
+        List<AuthenticatedServer> servers = new ArrayList<>();
         try (InputStream inputStream = User.class.getResourceAsStream(TRUSTED_SERVERS)) {
             if (inputStream == null) {
                 throw new IOException("No existe el fichero de servidores confiables");
@@ -165,17 +185,17 @@ public class User {
 
                     PublicKey serverPublicKey = Security.loadPublicKey(KEYS_DIRECTORY + fields[2]);
 
-                    return new AuthenticatedServer(server, serverPublicKey);
+                    servers.add(new AuthenticatedServer(server, serverPublicKey));
                 }
             }
         }
-        throw new IllegalStateException("No se pudo localizar ningún servidor conocido");
+        return servers;
     }
 
     private byte[] authenticate(Server.Method method, Object... parameters) throws Exception {
-        byte[] nonce = security.generateNonce();
+        byte[] nonce = Security.generateNonce();
         byte[] serializedData = Security.serialize(method, parameters);
-        byte[] hashedAuthentication = security.digest(serializedData, nonce);
+        byte[] hashedAuthentication = Security.digest(serializedData, nonce);
         byte[] authenticationCode = security.encrypt(hashedAuthentication, server);
         return Security.combine(nonce, authenticationCode);
     }
