@@ -3,8 +3,8 @@ package m2m.peer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import m2m.shared.Peer;
-import m2m.shared.Security;
-import m2m.shared.Security.Ephemeral;
+import m2m.shared.security.Security;
+import m2m.shared.security.Security.Ephemeral;
 import m2m.shared.Server;
 
 import javax.crypto.SecretKey;

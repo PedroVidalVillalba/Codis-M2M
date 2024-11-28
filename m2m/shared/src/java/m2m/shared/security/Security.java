@@ -1,4 +1,4 @@
-package m2m.shared;
+package m2m.shared.security;
 
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;

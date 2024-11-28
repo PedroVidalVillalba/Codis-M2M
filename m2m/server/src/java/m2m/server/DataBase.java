@@ -1,6 +1,6 @@
 package m2m.server;
 
-import m2m.shared.Security;
+import m2m.shared.security.Security;
 import org.intellij.lang.annotations.Language;
 
 import java.io.IOException;
