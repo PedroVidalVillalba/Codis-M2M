@@ -36,7 +36,6 @@ public class User {
     private final String username;
     private final String password;
     private final Security security;
-    private final Server server;
     private final ObservableMap<String, Peer> activeFriends;    /* Pares (username, reference) */
     private final ObservableMap<String, ObservableList<Message>> chats;
     private Peer reference;
@@ -49,9 +48,6 @@ public class User {
         this.activeFriends = FXCollections.observableHashMap();
         Map<String, SecretKey> authenticationKeys = new HashMap<>();
         this.chats = FXCollections.observableHashMap();
-        AuthenticatedServer authenticatedServer = findServer();
-        this.server = authenticatedServer.server();
-        PublicKey serverPublicKey = authenticatedServer.serverKey();
         this.username = username;
         this.password = Security.digest(password, username);
 
