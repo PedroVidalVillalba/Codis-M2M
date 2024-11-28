@@ -8,8 +8,8 @@
     <!-- Barra superior con botones -->
     <top>
         <ToolBar>
-            <Button fx:id="friendsButton" onAction="#handleFriends" />
-            <Button fx:id="logoutButton" onAction="#handleLogout" />
+            <Button fx:id="friendsButton" onAction="#handleFriends" text="󰣐"/>
+            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰠜"/>
         </ToolBar>
     </top>
 

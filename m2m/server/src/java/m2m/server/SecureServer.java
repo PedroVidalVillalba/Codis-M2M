@@ -2,8 +2,8 @@ package m2m.server;
 
 import m2m.shared.Peer;
 import m2m.shared.Server;
-import m2m.shared.Security;
-import m2m.shared.Security.Ephemeral;
+import m2m.shared.security.Security;
+import m2m.shared.security.Security.Ephemeral;
 
 import javax.crypto.SecretKey;
 import java.net.InetAddress;

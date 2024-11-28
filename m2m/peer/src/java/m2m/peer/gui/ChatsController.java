@@ -32,9 +32,6 @@ public class ChatsController {
 
     @FXML
     private void initialize() {
-        friendsButton.setText("❤");
-        logoutButton.setText("\uD83D\uDEAA");
-
         activeFriends = FXCollections.observableArrayList(PeerMain.getUser().getActiveFriends().keySet());
         // Sincronización entre el HashMap de amigos conectados de User y la lista de amigos con los que se puede chatear
         PeerMain.getUser().getActiveFriends().addListener((MapChangeListener<? super String, ? super Peer>) (change) -> {
