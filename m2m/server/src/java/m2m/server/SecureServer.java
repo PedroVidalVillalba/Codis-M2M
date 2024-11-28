@@ -35,24 +35,24 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         Security.ensureNotNull(client, clientPublicKey, clientNonce);
 
         /* Generar una clave efímera y un número aleatorio de un solo uso */
-        Ephemeral ephemeral = Security.generateEphemeral();
+        Ephemeral ephemeral = security.generateEphemeral();
         PrivateKey ephemeralPrivateKey = ephemeral.privateKey();
         PublicKey ephemeralPublicKey = ephemeral.publicKey();
         byte[] serverNonce = ephemeral.nonce();
 
         /* Calcular el secreto compartido usando la clave pública de quien inicia el saludo */
-        byte[] sharedSecret = Security.computeSharedSecret(ephemeralPrivateKey, clientPublicKey);
+        byte[] sharedSecret = security.computeSharedSecret(ephemeralPrivateKey, clientPublicKey);
         /* Combinar la información pública usada para verificar que el saludo fue correcto */
         byte[] handshakeData = Security.combine(clientNonce, serverNonce, clientPublicKey.getEncoded(), ephemeralPublicKey.getEncoded());
 
         /* Cifrar la información del saludo con la clave privada del servidor para autenticarse  */
-        byte[] signature = Security.sign(handshakeData, privateKey);
+        byte[] signature = security.sign(handshakeData, privateKey);
         /* Generar la clave compartida para la encriptación de la comunicación */
-        SecretKey secretKey = Security.deriveSecretKey(sharedSecret, handshakeData);
+        SecretKey secretKey = security.deriveSecretKey(sharedSecret, handshakeData);
 
         /* Enviar la clave pública del servidor, el nonce utilizado y la autenticación cifrada, lo que también vale para confirmar que el servidor tiene la clave */
-        byte[] clientResponse = client.greetBack(this, ephemeralPublicKey, serverNonce, Security.encrypt(signature, secretKey));
-        if (!Arrays.equals(Security.digest(handshakeData, signature), Security.decrypt(clientResponse, secretKey))) {
+        byte[] clientResponse = client.greetBack(this, ephemeralPublicKey, serverNonce, security.encrypt(signature, secretKey));
+        if (!Arrays.equals(security.digest(handshakeData, signature), security.decrypt(clientResponse, secretKey))) {
             throw new GeneralSecurityException("Falló la verificación de la respuesta del cliente durante el saludo.");
         }
 
@@ -115,7 +115,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         // Si el nuevo amigo está conectado, se notifica a ambos que están conectados
         Peer friend = connectedUsers.get(friendName);
         if (friend != null) {
-            SecretKey authenticationKey = Security.generateAuthenticationKey();
+            SecretKey authenticationKey = security.generateAuthenticationKey();
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
 
@@ -160,11 +160,11 @@ public class SecureServer extends UnicastRemoteObject implements Server{
             throw new GeneralSecurityException("Se requiere autenticación del usuario " + client.getUsername() + " para ejecutar el método " + method);
         }
 
-        byte[] nonce = Security.extractNonce(authentication);
-        byte[] encryptedAuthentication = Security.removeNonce(authentication);
+        byte[] nonce = security.extractNonce(authentication);
+        byte[] encryptedAuthentication = security.removeNonce(authentication);
 
         byte[] serializedData = Security.serialize(method, parameters);
-        byte[] expectedAuthentication = Security.digest(serializedData, nonce);
+        byte[] expectedAuthentication = security.digest(serializedData, nonce);
         byte[] decryptedAuthentication = security.decrypt(encryptedAuthentication, client);
 
         if (!Arrays.equals(expectedAuthentication, decryptedAuthentication)) {
@@ -173,9 +173,9 @@ public class SecureServer extends UnicastRemoteObject implements Server{
     }
 
     private byte[] authenticate(Peer.Method method, Peer client, Object... parameters) throws Exception {
-        byte[] nonce = Security.generateNonce();
+        byte[] nonce = security.generateNonce();
         byte[] serializedData = Security.serialize(method, parameters);
-        byte[] hashedAuthentication = Security.digest(serializedData, nonce);
+        byte[] hashedAuthentication = security.digest(serializedData, nonce);
         byte[] authenticationCode = security.encrypt(hashedAuthentication, client);
         return Security.combine(nonce, authenticationCode);
     }
@@ -192,7 +192,7 @@ public class SecureServer extends UnicastRemoteObject implements Server{
         for (String friendName : friends) {
             Peer friend = connectedUsers.get(friendName);
 
-            SecretKey authenticationKey = Security.generateAuthenticationKey();
+            SecretKey authenticationKey = security.generateAuthenticationKey();
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
 
