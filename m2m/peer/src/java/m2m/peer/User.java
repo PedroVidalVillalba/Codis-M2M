@@ -1,8 +1,5 @@
 package m2m.peer;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import m2m.shared.Peer;
 import m2m.shared.security.Security;
 import m2m.shared.security.Security.Ephemeral;
@@ -36,18 +33,19 @@ public class User {
     private final String username;
     private final String password;
     private final Security security;
-    private final ObservableMap<String, Peer> activeFriends;    /* Pares (username, reference) */
-    private final ObservableMap<String, ObservableList<Message>> chats;
+    private final Map<String, Peer> activeFriends;    /* Pares (username, reference) */
+    private final Map<String, List<Message>> chats;
     private Peer reference;
     private Server server;
+    private Notifier notifier;
 
     private record AuthenticatedServer(Server server, PublicKey serverKey) {}
 
     public User(String username, String password) throws Exception {
         this.security = new Security();
-        this.activeFriends = FXCollections.observableHashMap();
+        this.activeFriends = new HashMap<>();
         Map<String, SecretKey> authenticationKeys = new HashMap<>();
-        this.chats = FXCollections.observableHashMap();
+        this.chats = new HashMap<>();
         this.username = username;
         this.password = Security.digest(password, username);
 
@@ -87,16 +85,27 @@ public class User {
         return server;
     }
 
-    public ObservableMap<String, Peer> getActiveFriends() {
+    public Map<String, Peer> getActiveFriends() {
         return activeFriends;
     }
 
-    public ObservableMap<String, ObservableList<Message>> getChats() {
+    public Map<String, List<Message>> getChats() {
         return chats;
     }
 
-    public ObservableList<Message> getChat(String friend) {
+    public List<Message> getChat(String friend) {
         return chats.get(friend);
+    }
+
+    public Notifier getNotifier() {
+        return notifier;
+    }
+
+    public void setNotifier(Notifier notifier) {
+        this.notifier = notifier;
+        if(reference instanceof SecurePeer) {
+            ((SecurePeer) reference).setNotifier(notifier);
+        }
     }
 
     /* Métodos públicos que exportan la funcionalidad de la API */

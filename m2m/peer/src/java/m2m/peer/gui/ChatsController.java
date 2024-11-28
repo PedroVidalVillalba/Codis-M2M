@@ -1,12 +1,10 @@
 package m2m.peer.gui;
 
+import javafx.application.Platform;
 import javafx.collections.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import m2m.peer.Message;
-import m2m.peer.MessageType;
-import m2m.peer.PeerMain;
-import m2m.shared.Peer;
+import m2m.peer.*;
 
 public class ChatsController {
     @FXML
@@ -20,73 +18,66 @@ public class ChatsController {
     @FXML
     private Button logoutButton;
     @FXML
-    private ListView<String> friendsList;
+    private ListView<String> friendsListView;
 
     private ObservableList<String> activeFriends;
 
     private ObservableList<String> received;
     private ObservableList<String> sent;
-    private ListChangeListener<Message> chatListener;
     private String currentFriendChat;
+    private User user;
+    private Notifier notifier;
 
 
     @FXML
-    private void initialize() {
-        activeFriends = FXCollections.observableArrayList(PeerMain.getUser().getActiveFriends().keySet());
-        // Sincronización entre el HashMap de amigos conectados de User y la lista de amigos con los que se puede chatear
-        PeerMain.getUser().getActiveFriends().addListener((MapChangeListener<? super String, ? super Peer>) (change) -> {
-            if (change.wasAdded() && change.getKey() != null) {
-                activeFriends.add(change.getKey());
-            } else if (change.wasRemoved() && change.getKey() != null) {
-                activeFriends.remove(change.getKey());
-            }
-        });
-        friendsList.setItems(FXCollections.observableArrayList(activeFriends));
+    private void initialize() throws Exception {
+        friendsButton.setText("󰣐");
+        logoutButton.setText("󰠜");
+        user = PeerMain.getUser();
 
-        // Al principio, no se pone nada en mensajes enviados y recibidos
+        notifier = new NotifierGUI();
+        user.setNotifier(notifier);
+        activeFriends = FXCollections.observableArrayList(user.getActiveFriends().keySet());
+
+        // Configuración de notificaciones de conexión y desconexión de amigos
+        notifier.setAddActiveFriend(friendName -> {
+            Platform.runLater(() -> activeFriends.add(friendName));
+        });
+        notifier.setRemoveActiveFriend(friendName -> {
+            Platform.runLater(() -> activeFriends.remove(friendName));
+        });
+
+        friendsListView.setItems(FXCollections.observableArrayList(activeFriends));
+
+
         receivedMessages.setItems(FXCollections.observableArrayList());
         sentMessages.setItems(FXCollections.observableArrayList());
         currentFriendChat = null;
 
-        // Cambiar de chat al seleccionar un amigo
-        friendsList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                loadChat(newValue);
-            }
-        });
-
-        chatListener = change-> {
-            if (change.wasAdded() && change.getAddedSubList() != null) {
-                for (Message message : change.getAddedSubList()) {
-                    if (message.type() == MessageType.SENT) {
-                        sent.add(message.message());
-                    } else {
-                        received.add(message.message());
-                    }
-                }
-            }
-        };
+        for(String friend: activeFriends) {
+            user.greet(friend);
+        }
 
     }
 
-    private void loadChat(String friendName) {
-        if (currentFriendChat != null) {
-            PeerMain.getUser().getChat(currentFriendChat).removeListener(chatListener);
-        }
+    @FXML
+    private void loadChat() {
+        String friendName = friendsListView.getSelectionModel().getSelectedItem();
         if (friendName != null) {
-            sent.clear();
-            received.clear();
             currentFriendChat = friendName;
+            received = FXCollections.observableArrayList();
+            sent = FXCollections.observableArrayList();
+            notifier.setMessage(message -> {
+                Platform.runLater(() -> received.add(message));
+            });
 
-            ObservableList<Message> messages = PeerMain.getUser().getChat(friendName);
-            for (Message message : messages) {
+            for (Message message : PeerMain.getUser().getChat(friendName)) {
                 if (message.type() == MessageType.SENT) {
                     sent.add(message.message());
                 } else {
                     received.add(message.message());
                 }
             }
-            messages.addListener(chatListener);
             sentMessages.setItems(FXCollections.observableArrayList(sent));
             receivedMessages.setItems(FXCollections.observableArrayList(received));
 
@@ -99,7 +90,8 @@ public class ChatsController {
         String message = messageField.getText();
         if (!message.isEmpty()) {
             try {
-                PeerMain.getUser().sendMessage(currentFriendChat, message);
+                user.sendMessage(currentFriendChat, message);
+                sent.add(message);
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             } finally {
@@ -114,7 +106,8 @@ public class ChatsController {
     }
 
     @FXML
-    private void handleLogout() {
+    private void handleLogout() throws Exception {
+        user.logout();
         PeerMain.setRoot("gui/Login.fxml");  // Volver al login
     }
 }

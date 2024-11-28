@@ -15,12 +15,21 @@ public class PeerMain extends Application {
     public PeerMain() {}
 
     @Override
-    public void start(Stage stage) throws Exception{
+    public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("gui/Login.fxml"));
         Scene scene = new Scene(loader.load());
 
         primaryStage = stage;
-        stage.setOnCloseRequest(event -> System.exit(0));
+        stage.setOnCloseRequest(event -> {
+            if(user != null) {
+                try {
+                    user.logout();
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+            System.exit(0);
+        });
 
         stage.setTitle("Aplicación P2P segura");
         stage.setScene(scene);

@@ -1,7 +1,5 @@
 package m2m.peer;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import m2m.shared.Peer;
 import m2m.shared.security.Security;
 import m2m.shared.security.Security.Ephemeral;
@@ -21,11 +19,12 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     private final Security security;
     private final Map<String, Peer> activeFriends;
     private final Map<String, SecretKey> authenticationKeys;
-    private final Map<String, ObservableList<Message>> chats;
+    private final Map<String, List<Message>> chats;
     private final Server server;
     private final PublicKey serverPublicKey;
+    private Notifier notifier;
 
-    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, ObservableList<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
+    public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, List<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
         super();
         Security.ensureNotNull(username, security, activeFriends, authenticationKeys, server, serverPublicKey);
         this.username = username;
@@ -40,6 +39,10 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     @Override
     public String getUsername() throws RemoteException {
         return this.username;
+    }
+
+    public void setNotifier(Notifier notifier) {
+        this.notifier = notifier;
     }
 
     @Override
@@ -115,6 +118,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         String decryptedMessage = security.decrypt(message, friend);
         List<Message> chat = chats.get(friend.getUsername());
         chat.add(new Message(decryptedMessage, MessageType.RECEIVED));
+        notifier.message(message);
     }
 
     @Override
@@ -126,7 +130,8 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKey, server);
         activeFriends.put(friendName, friend);
         authenticationKeys.put(friendName, authenticationKey);
-        chats.put(friendName, FXCollections.observableArrayList());
+        chats.put(friendName, new ArrayList<>());
+        notifier.addActiveFriend(friendName);
     }
 
     @Override
@@ -139,7 +144,8 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         for (String friendName : activeFriends.keySet()) {
             SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKeys.get(friendName), server);
             authenticationKeys.put(friendName, authenticationKey);
-            chats.put(friendName, FXCollections.observableArrayList());
+            chats.put(friendName, new ArrayList<>());
+            notifier.addActiveFriend(friendName);
         }
     }
 
@@ -153,6 +159,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         authenticationKeys.remove(friendName);
         chats.remove(friendName);
         security.removeSecretKey(friend);
+        notifier.removeActiveFriend(friendName);
     }
 
     private void verifyServerAuthentication(byte[] authentication, Peer.Method method, Object... parameters) throws Exception {
