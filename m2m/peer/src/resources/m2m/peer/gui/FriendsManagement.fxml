@@ -6,9 +6,50 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="m2m.peer.gui.FriendsManagementController"
-            prefHeight="400.0" prefWidth="600.0">
 
-</AnchorPane>
+
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m2m.peer.gui.FriendsManagementController">
+    <!-- Barra superior con botones -->
+    <top>
+        <ToolBar>
+            <Button fx:id="chatsButton" onAction="#handleChats" text="󰭹" />
+            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰠜" />
+        </ToolBar>
+    </top>
+
+
+    <center>
+        <HBox spacing="10" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <!-- Columna 1: Lista de amigos -->
+            <VBox spacing="10" alignment="CENTER" VBox.vgrow="ALWAYS">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Lista de amigos" />
+                <HBox spacing="5" alignment="CENTER">
+                    <TextField visible="false" />
+                </HBox>
+                <ListView fx:id="friendsListView" VBox.vgrow="ALWAYS" />
+                <Label fx:id="friendsErrorLabel" />
+            </VBox>
+
+            <!-- Columna 2: Búsqueda de personas -->
+            <VBox spacing="10" alignment="CENTER" VBox.vgrow="ALWAYS">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Buscar personas" />
+                <HBox spacing="5" alignment="CENTER">
+                    <TextField fx:id="searchField" promptText="Nombre de usuario" />
+                    <Button text="Buscar" onAction="#searchForPeople" />
+                </HBox>
+                <ListView fx:id="searchResultsListView" VBox.vgrow="ALWAYS" />
+                <Label fx:id="searchErrorLabel" />
+            </VBox>
+
+            <!-- Columna 3: Solicitudes de amistad pendientes -->
+            <VBox spacing="10" alignment="CENTER" VBox.vgrow="ALWAYS">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Solicitudes de amistad" />
+                <HBox spacing="5" alignment="CENTER">
+                    <TextField visible="false" />
+                </HBox>
+                <ListView fx:id="friendRequestsListView" VBox.vgrow="ALWAYS" />
+                <Label fx:id="requestsErrorLabel" />
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

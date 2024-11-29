@@ -113,7 +113,7 @@ public class User {
         Peer friend = activeFriends.get(friendName);
         Ephemeral ephemeral = security.generateEphemeral(friend);
         friend.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
-        System.out.println("Saludando a " + friendName);
+        // System.out.println("Saludando a " + friendName);
     }
 
     public void sendMessage(String friendName, String message) throws Exception {
@@ -155,6 +155,14 @@ public class User {
 
     public List<String> searchUsers(String pattern) throws Exception {
         return server.searchUsers(this.reference, pattern, authenticate(Server.Method.SEARCH_USERS, pattern));
+    }
+
+    public List<String> searchFriends() throws Exception {
+        return server.searchFriends(this.reference, authenticate(Server.Method.SEARCH_FRIENDS));
+    }
+
+    public List<String> searchPendingRequests() throws Exception {
+        return server.searchPendingRequests(this.reference, authenticate(Server.Method.SEARCH_PENDING_REQUESTS));
     }
 
     /* Métodos privados que facilitan la lógica del código */

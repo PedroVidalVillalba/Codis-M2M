@@ -158,16 +158,28 @@ public class DataBase {
             throw new SQLException("El usuario " + receiverUsername + " no está registrado");
         }
 
-        ArrayList<String> friends = getFriends(senderUsername);
-        // Comprobación de que no sean ya amigos
-        if(friends.contains(receiverUsername)) {
-            throw new SQLException("Los usuarios " + senderUsername + " y " + receiverUsername + " ya son amigos");
+        @Language("SQL")
+        String query = "SELECT state " +
+                "FROM friends " +
+                "WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)";
+
+        try (PreparedStatement preparedStatement = prepareQuery(query, senderUsername, receiverUsername, receiverUsername, senderUsername);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (resultSet.next()) {
+                String state = resultSet.getString( "state");
+                if (state.equals("pending")) {
+                    throw new SQLException("La solicitud ya fue enviada");
+                } else if (state.equals("accepted")) {
+                    throw new SQLException("Los usuarios ya son amigos");
+                }
+
+            }
         }
 
         @Language("SQL")
-        String query = "INSERT INTO friends (sender, receiver, state) VALUES (?, ?, 'pending')";
+        String query2 = "INSERT INTO friends (sender, receiver, state) VALUES (?, ?, 'pending')";
 
-        executeUpdate(query, senderUsername, receiverUsername);
+        executeUpdate(query2, senderUsername, receiverUsername);
     }
 
     // Aceptación de una solicitud de amistad
@@ -207,7 +219,7 @@ public class DataBase {
         ArrayList<String> users = new ArrayList<>();
         // Si el patrón no tiene la longitud mínima, no se devuelve nada
         if(pattern.length() < MIN_USERNAME_LENGTH) {
-            throw new SQLException("La longitud mínima para la búsqueda es de " + MIN_USERNAME_LENGTH + " caracteres");
+            throw new SQLException("La longitud mínima es de " + MIN_USERNAME_LENGTH + " caracteres");
         }
 
         @Language("SQL")
@@ -219,7 +231,24 @@ public class DataBase {
             }
             return users;
         }
+    }
 
+    public List<String> getPendingRequests(String user) throws SQLException {
+        ArrayList<String> pendingPeople = new ArrayList<>();
+
+        @Language("SQL")
+        String query = "SELECT sender " +
+                "FROM friends " +
+                "WHERE state = 'pending' AND receiver = ?";
+
+        try (PreparedStatement preparedStatement = prepareQuery(query, user);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                pendingPeople.add(resultSet.getString("sender"));
+            }
+        }
+
+        return pendingPeople;
     }
 
     private int executeUpdate(String query, String... missingFields) throws SQLException {

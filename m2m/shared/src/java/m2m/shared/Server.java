@@ -7,7 +7,7 @@ import java.util.List;
 public interface Server extends Remote {
     /* Enumeración con los métodos proporcionados por el servidor, con fines de autenticación */
     enum Method {
-        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS;
+        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS, SEARCH_FRIENDS, SEARCH_PENDING_REQUESTS;
 
         private boolean requiresLogin;
         static {
@@ -19,6 +19,8 @@ public interface Server extends Remote {
             FRIEND_REJECT.requiresLogin = true;
             FRIEND_REMOVE.requiresLogin = true;
             SEARCH_USERS.requiresLogin = false;
+            SEARCH_FRIENDS.requiresLogin = true;
+            SEARCH_PENDING_REQUESTS.requiresLogin = true;
         }
         
         public boolean requiresLogin() {
@@ -92,7 +94,7 @@ public interface Server extends Remote {
     void friendReject(Peer user, String friendName, byte[] authentication) throws Exception;
 
     /**
-     * Elimina al amigo del usuario cuyo nombre coincida con {@code username}.
+     * Elimina al amigo del usuario cuyo nombre coincida con {@code username}. Método a ser llamado por un peer.
      * @param user Peer que está eliminando el amigo.
      * @param friendName Nombre de usuario del amigo a eliminar.
      * @param authentication Código de autenticación del usuario.
@@ -101,7 +103,7 @@ public interface Server extends Remote {
     void friendRemove(Peer user, String friendName, byte[] authentication) throws Exception;
 
     /**
-     * Busca a los usuarios que contengan {@code pattern} en su nombre, con el objetivo de mandarles solicitudes de amistad a continuación.
+     * Busca a los usuarios que contengan {@code pattern} en su nombre, con el objetivo de mandarles solicitudes de amistad a continuación. Método a ser llamado por un peer.
      * @param peer Peer que solicita la búsqueda.
      * @param pattern Parte del nombre del usuario buscado. Debe tener al menos 3 caracteres por razones de seguridad.
      * @param authentication Código de autenticación del usuario.
@@ -109,4 +111,23 @@ public interface Server extends Remote {
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
     List<String> searchUsers(Peer peer, String pattern, byte[] authentication) throws Exception;
-}
+
+    /**
+     * Busca a todos los usuarios que sean amigos de quien llama al método. Método a ser llamado por un peer.
+     * @param peer Peer que solicita la búsqueda.
+     * @param authentication Código de autenticación del usuario.
+     * @return La lista de amigos del usuario.
+     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     */
+    List<String> searchFriends(Peer peer, byte[] authentication) throws Exception;
+
+    /**
+     * Busca todas las solicitudes de amistad pendientes de quien llama al método. Método a ser llamado por un peer.
+     * @param peer Peer que solicita la búsqueda.
+     * @param authentication Código de autenticación del usuario.
+     * @return La lista de solicitudes pendientes del usuario.
+     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     */
+    List<String> searchPendingRequests(Peer peer, byte[] authentication) throws Exception;
+
+    }

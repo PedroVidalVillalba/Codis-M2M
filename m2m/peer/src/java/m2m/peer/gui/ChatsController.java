@@ -1,6 +1,5 @@
 package m2m.peer.gui;
 
-import javafx.application.Platform;
 import javafx.collections.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -26,13 +25,10 @@ public class ChatsController {
     private ObservableList<String> sent;
     private String currentFriendChat;
     private User user;
-    private Notifier notifier;
 
 
     @FXML
     private void initialize() throws Exception {
-        friendsButton.setText("󰣐");
-        logoutButton.setText("󰠜");
         user = PeerMain.getUser();
         activeFriends = PeerMain.getActiveFriends();
         sent = PeerMain.getSent();

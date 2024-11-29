@@ -6,6 +6,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import m2m.peer.gui.NotifierGUI;
 
@@ -16,6 +19,7 @@ public class PeerMain extends Application {
     private static Stage primaryStage;
     private static User user;
 
+    private static ObservableList<HBox> friends;
     private static ObservableList<String> activeFriends;
     private static ObservableList<String> received;
     private static ObservableList<String> sent;
@@ -60,6 +64,10 @@ public class PeerMain extends Application {
         return user;
     }
 
+    public static ObservableList<HBox> getFriends() {
+        return friends;
+    }
+
     public static ObservableList<String> getActiveFriends() {
         return activeFriends;
     }
@@ -79,10 +87,29 @@ public class PeerMain extends Application {
             activeFriends = FXCollections.observableArrayList();
             sent = FXCollections.observableArrayList();
             received = FXCollections.observableArrayList();
+            friends = FXCollections.observableArrayList();
 
             // Configuración de notificaciones de conexión y desconexión de amigos
             notifier.setNotifyAddActiveFriend(friendName -> {
-                Platform.runLater(() -> activeFriends.add(friendName));
+                Platform.runLater(() -> {
+                    activeFriends.add(friendName);
+
+                    Label nameLabel = new Label(friendName);
+                    nameLabel.setStyle("-fx-font-size: 16px;");
+                    nameLabel.setPrefWidth(90);
+                    Label statusLabel = new Label("🟢");
+                    Button removeButton = new Button("Eliminar");
+                    removeButton.setOnAction(e -> {
+                        try {
+                            user.removeFriendship(friendName);
+                        } catch (Exception exception) {
+                            System.err.println("Error al eliminar amigo: " + exception.getMessage());
+                        }
+                    });
+
+                    HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
+                    friends.add(friendBox);
+                });
             });
             notifier.setNotifyRemoveActiveFriend(friendName -> {
                 Platform.runLater(() -> activeFriends.remove(friendName));
