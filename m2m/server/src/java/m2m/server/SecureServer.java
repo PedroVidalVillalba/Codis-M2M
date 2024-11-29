@@ -72,7 +72,8 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         database.registerUser(username, rawPassword);
 
         connectedUsers.put(username, peer);
-        notifyFriendConnection(username);
+        // Un usuario recién registrado no debería tener amigos
+        //notifyFriendConnection(username);
     }
 
     @Override
@@ -85,7 +86,9 @@ public class SecureServer extends UnicastRemoteObject implements Server {
             throw new Exception("El usuario ya ha iniciado sesión desde otro lugar");
         }
         byte[] rawPassword = Base64.getDecoder().decode(security.decrypt(password, peer));
+        // System.out.print("Probando login " + username);
         database.loginUser(username, rawPassword);
+        // System.out.println(" Login ok");
 
         connectedUsers.put(username, peer);
         notifyFriendConnection(username);
@@ -199,7 +202,9 @@ public class SecureServer extends UnicastRemoteObject implements Server {
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
 
+            // System.out.println("Probando addActiveFriend: " +  friendName);
             friend.addActiveFriend(user, encryptedKeyForFriend, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, friend, user, encryptedKeyForFriend));
+            // System.out.println("addActiveFriend ok");
             activeFriends.put(friendName, friend);
             encryptedAuthenticationKeys.put(friendName, encryptedKeyForUser);
         }

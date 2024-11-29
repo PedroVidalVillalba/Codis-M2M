@@ -33,10 +33,12 @@ public class LoginController {
 
         try {
             User user = new User(username, password);
+            PeerMain.initializeNotifier(user);
             user.login();
             PeerMain.setUser(user);
             PeerMain.setRoot("gui/Chats.fxml");
         } catch (Exception e) {
+            System.err.println("Error en el login: " + e.getMessage());
             errorLabel.setText(e.getMessage());
             errorLabel.setVisible(true);
         }
@@ -59,6 +61,7 @@ public class LoginController {
             PeerMain.setUser(user);
             PeerMain.setRoot("gui/Chats.fxml");
         } catch (Exception e) {
+            System.err.println("Error en el sign up: " + e.getMessage());
             errorLabel.setText(e.getMessage());
             errorLabel.setVisible(true);
         }
