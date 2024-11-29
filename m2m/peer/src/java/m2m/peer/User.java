@@ -49,7 +49,7 @@ public class User {
         this.username = username;
         this.password = Security.digest(password, username);
 
-        List<AuthenticatedServer> authenticatedServers = findServers();
+        List<AuthenticatedServer> authenticatedServers = findServers(this.security);
         for (AuthenticatedServer authenticatedServer : authenticatedServers) {
             PublicKey serverPublicKey = authenticatedServer.serverKey();
             Server server = authenticatedServer.server();
@@ -60,6 +60,7 @@ public class User {
                 /* Si fue todo bien, guardamos la información relevante */
                 this.server = server;
                 this.reference = reference;
+                this.security.setSelfReference(reference);
                 return;
             } catch (GeneralSecurityException exception) {
                 /* Si no pudimos autenticar a ese servidor, lo intentamos con el siguiente */
@@ -166,7 +167,7 @@ public class User {
     }
 
     /* Métodos privados que facilitan la lógica del código */
-    private static List<AuthenticatedServer> findServers() throws Exception {
+    private static List<AuthenticatedServer> findServers(Security security) throws Exception {
         List<AuthenticatedServer> servers = new ArrayList<>();
         try (InputStream inputStream = User.class.getResourceAsStream(TRUSTED_SERVERS)) {
             if (inputStream == null) {
@@ -190,8 +191,7 @@ public class User {
 
                     Server server;
                     try {
-                        Registry registry = LocateRegistry.getRegistry(host, port);
-                        server = (Server) registry.lookup(Server.RMI_NAME);
+                        server = serverLookup(host, port, security);
                     } catch (Exception exception) {
                         /* Si cualquier cosa sale mal, ignoramos */
                         continue;
@@ -204,6 +204,14 @@ public class User {
             }
         }
         return servers;
+    }
+
+    private static Server serverLookup(String host, int port, Security security) throws Exception {
+//        SecurityInjection.set(security);
+        Registry registry = LocateRegistry.getRegistry(host, port);
+        Server server = (Server) registry.lookup(Server.RMI_NAME);
+//        SecurityInjection.remove();
+        return server;
     }
 
     private byte[] authenticate(Server.Method method, Object... parameters) throws Exception {

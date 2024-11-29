@@ -16,16 +16,15 @@ import java.util.*;
 
 public class SecurePeer extends UnicastRemoteObject implements Peer {
     private final String username;
-    private final Security security;
-    private final Map<String, Peer> activeFriends;
-    private final Map<String, SecretKey> authenticationKeys;
-    private final Map<String, List<Message>> chats;
+    private final transient Security security;  /* Marcar explícitamente como no serializable */
+    private final transient Map<String, Peer> activeFriends;
+    private final transient Map<String, SecretKey> authenticationKeys;
+    private final transient Map<String, List<Message>> chats;
     private final Server server;
     private final PublicKey serverPublicKey;
     private Notifier notifier;
 
     public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, List<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
-        super();
         Security.ensureNotNull(username, security, activeFriends, authenticationKeys, server, serverPublicKey);
         this.username = username;
         this.security = security;

@@ -13,19 +13,22 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
 
-public class SecureServer extends UnicastRemoteObject implements Server{
-    private final DataBase database;
-    private final Map<String, Peer> connectedUsers;
-    private final Security security;
-    private final PrivateKey privateKey;
+public class SecureServer extends UnicastRemoteObject implements Server {
+    private final transient DataBase database;
+    private final transient Map<String, Peer> connectedUsers;
+    private final transient Security security;
+    private final transient PrivateKey privateKey;
 
     public SecureServer() throws Exception {
-        super();
         database = DataBase.getCurrentDB();
         this.security = new Security();
         this.connectedUsers = new HashMap<>();
         String privateKeyPath = "/keys/server_private_key_" + InetAddress.getLocalHost().getHostName() + ".pem";
         this.privateKey = Security.loadPrivateKey(privateKeyPath);
+        this.security.setSelfReference(this);
+//        /* Exportar este objeto en un puerto anónimo, con las correspondientes fábricas de sockets seguros */
+//        UnicastRemoteObject.unexportObject(this, true); /* El constructor por defecto ya exporta el objeto; quitarlo y añadir las fábricas de sockets */
+//        UnicastRemoteObject.exportObject(this, 0, new SecureClientSocketFactory(this), new SecureServerSocketFactory(security));
     }
 
 

@@ -3,14 +3,12 @@ package m2m.shared.security;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.security.*;
 import java.rmi.Remote;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,16 +25,22 @@ public class Security {
     public static final int GCM_TAG_LENGTH = 128;   // 128 bits
     public static final int AES_KEY_SIZE = 256;     // Bits para usar en AES
     public static final int NONCE_LENGTH = 16;      // 128 bits
+    public static final int DIGEST_LENGTH = 32;     // 256 bits
     public static final String HKDF_INFO = "M2M key derivation for AES";
 
     public record Ephemeral(PublicKey publicKey, PrivateKey privateKey, byte[] nonce) {}
 
     private final Map<Remote, SecretKey> keys;
     private final Map<Remote, Ephemeral> ongoingHandshakes;
+    private Remote selfReference;
 
     public Security() {
         this.keys = new HashMap<>();
         this.ongoingHandshakes = new HashMap<>();
+    }
+
+    public void setSelfReference(Remote selfReference) {
+        this.selfReference = selfReference;
     }
 
     /* Método encrypt de bajo nivel actuando sobre arrays de bytes directamente */
@@ -50,6 +54,24 @@ public class Security {
 
         byte[] encryptedData = cipher.doFinal(data);
         return combine(iv, encryptedData);   // Prepend IV a los datos encriptados
+    }
+
+    public OutputStream encryptStream(OutputStream out, Remote receiver) throws GeneralSecurityException, IOException {
+        ensureNotNull(out, receiver);
+        SecretKey key = getSecretKey(receiver);
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+
+        byte[] iv = generateIV();   // Generar un nuevo Initialization Vector para cada encriptación
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
+
+        /* Escribir el Initialization Vector en el stream primero */
+        out.write(iv);
+        /* Escribir el hash del emisor para poder conocerlo en el receptor */
+        out.write(digest(serialize(selfReference), iv));
+        out.flush();
+
+        return new CipherOutputStream(out, cipher);
     }
 
     public String encrypt(String data, Remote remote) throws GeneralSecurityException {
@@ -82,6 +104,45 @@ public class Security {
         cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
 
         return cipher.doFinal(encryptedData);
+    }
+
+    public InputStream decryptStream(InputStream in, SecureSocket socket) throws GeneralSecurityException, IOException {
+        ensureNotNull(in);
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+
+        /* Leer el Initialization Vector del stream primero */
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        if (in.read(iv) != GCM_IV_LENGTH) {
+            throw new GeneralSecurityException("No se pudo leer el IV del stream.");
+        }
+
+        /* Leer el hash del emisor para poder inicializarlo */
+        byte[] senderHash = new byte[DIGEST_LENGTH];
+        if (in.read(senderHash) != DIGEST_LENGTH) {
+            throw new GeneralSecurityException("No se pudo leer el hash del emisor del stream");
+        }
+
+        /* Buscar una referencia conocida con hash coincidente */
+        Remote sender = null;
+        for (Remote remote : keys.keySet()) {
+            if (Arrays.equals(senderHash, digest(serialize(remote), iv))) {
+                sender = remote;
+                break;
+            }
+        }
+        if (sender == null) {
+            throw new GeneralSecurityException("El hash del emisor no coincide con ninguna referencia conocida");
+        }
+
+        /* Inicializar el descifrado */
+        SecretKey key = getSecretKey(sender);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
+
+        /* Actualizar el socket para que sepa a quién responder */
+        socket.setReceiver(sender);
+
+        return new CipherInputStream(in, cipher);
     }
 
     public String decrypt(String data, Remote remote) throws GeneralSecurityException {
