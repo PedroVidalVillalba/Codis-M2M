@@ -18,15 +18,14 @@ import java.util.*;
 
 public class SecurePeer extends UnicastRemoteObject implements Peer {
     private final String username;
-    private final Security security;
-    private final Map<String, Peer> activeFriends;
-    private final Map<String, SecretKey> authenticationKeys;
-    private final Map<String, ObservableList<Message>> chats;
+    private final transient Security security;  /* Marcar explícitamente como no serializable */
+    private final transient Map<String, Peer> activeFriends;
+    private final transient Map<String, SecretKey> authenticationKeys;
+    private final transient Map<String, ObservableList<Message>> chats;
     private final Server server;
     private final PublicKey serverPublicKey;
 
     public SecurePeer(String username, Security security, Map<String, Peer> activeFriends, Map<String, SecretKey> authenticationKeys, Map<String, ObservableList<Message>> chats, Server server, PublicKey serverPublicKey) throws RemoteException {
-        super();
         Security.ensureNotNull(username, security, activeFriends, authenticationKeys, server, serverPublicKey);
         this.username = username;
         this.security = security;
@@ -35,6 +34,9 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         this.chats = chats;
         this.server = server;
         this.serverPublicKey = serverPublicKey;
+//        /* Exportar este objeto en un puerto anónimo, con las correspondientes fábricas de sockets seguros */
+//        UnicastRemoteObject.unexportObject(this, true); /* El constructor por defecto ya exporta el objeto; quitarlo y añadir las fábricas de sockets */
+//        UnicastRemoteObject.exportObject(this, 0, new SecureClientSocketFactory(this), new SecureServerSocketFactory(security));
     }
 
     @Override
