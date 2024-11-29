@@ -118,7 +118,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         String decryptedMessage = security.decrypt(message, friend);
         List<Message> chat = chats.get(friend.getUsername());
         chat.add(new Message(decryptedMessage, MessageType.RECEIVED));
-        notifier.message(message);
+        notifier.notifyMessage(message);
     }
 
     @Override
@@ -131,7 +131,8 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         activeFriends.put(friendName, friend);
         authenticationKeys.put(friendName, authenticationKey);
         chats.put(friendName, new ArrayList<>());
-        notifier.addActiveFriend(friendName);
+        notifier.notifyAddActiveFriend(friendName);
+        // System.out.println("Añadido amigo " + friendName);
     }
 
     @Override
@@ -145,7 +146,8 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
             SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKeys.get(friendName), server);
             authenticationKeys.put(friendName, authenticationKey);
             chats.put(friendName, new ArrayList<>());
-            notifier.addActiveFriend(friendName);
+            notifier.notifyAddActiveFriend(friendName);
+            // System.out.println("Añadido amigo " + friendName);
         }
     }
 
@@ -159,7 +161,7 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         authenticationKeys.remove(friendName);
         chats.remove(friendName);
         security.removeSecretKey(friend);
-        notifier.removeActiveFriend(friendName);
+        notifier.notifyRemoveActiveFriend(friendName);
     }
 
     private void verifyServerAuthentication(byte[] authentication, Peer.Method method, Object... parameters) throws Exception {

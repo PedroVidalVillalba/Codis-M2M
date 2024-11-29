@@ -34,24 +34,13 @@ public class ChatsController {
         friendsButton.setText("󰣐");
         logoutButton.setText("󰠜");
         user = PeerMain.getUser();
+        activeFriends = PeerMain.getActiveFriends();
+        sent = PeerMain.getSent();
+        received = PeerMain.getReceived();
 
-        notifier = new NotifierGUI();
-        user.setNotifier(notifier);
-        activeFriends = FXCollections.observableArrayList(user.getActiveFriends().keySet());
-
-        // Configuración de notificaciones de conexión y desconexión de amigos
-        notifier.setAddActiveFriend(friendName -> {
-            Platform.runLater(() -> activeFriends.add(friendName));
-        });
-        notifier.setRemoveActiveFriend(friendName -> {
-            Platform.runLater(() -> activeFriends.remove(friendName));
-        });
-
-        friendsListView.setItems(FXCollections.observableArrayList(activeFriends));
-
-
-        receivedMessages.setItems(FXCollections.observableArrayList());
-        sentMessages.setItems(FXCollections.observableArrayList());
+        friendsListView.setItems(activeFriends);
+        sentMessages.setItems(sent);
+        receivedMessages.setItems(received);
         currentFriendChat = null;
 
         for(String friend: activeFriends) {
@@ -67,9 +56,7 @@ public class ChatsController {
             currentFriendChat = friendName;
             received = FXCollections.observableArrayList();
             sent = FXCollections.observableArrayList();
-            notifier.setMessage(message -> {
-                Platform.runLater(() -> received.add(message));
-            });
+
 
             for (Message message : PeerMain.getUser().getChat(friendName)) {
                 if (message.type() == MessageType.SENT) {
@@ -108,6 +95,7 @@ public class ChatsController {
     @FXML
     private void handleLogout() throws Exception {
         user.logout();
+        PeerMain.setUser(null);
         PeerMain.setRoot("gui/Login.fxml");  // Volver al login
     }
 }

@@ -1,9 +1,13 @@
 package m2m.peer;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import m2m.peer.gui.NotifierGUI;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -11,6 +15,10 @@ import java.util.Objects;
 public class PeerMain extends Application {
     private static Stage primaryStage;
     private static User user;
+
+    private static ObservableList<String> activeFriends;
+    private static ObservableList<String> received;
+    private static ObservableList<String> sent;
 
     public PeerMain() {}
 
@@ -50,6 +58,39 @@ public class PeerMain extends Application {
 
     public static User getUser() {
         return user;
+    }
+
+    public static ObservableList<String> getActiveFriends() {
+        return activeFriends;
+    }
+
+    public static ObservableList<String> getReceived() {
+        return received;
+    }
+
+    public static ObservableList<String> getSent() {
+        return sent;
+    }
+
+    public static void initializeNotifier (User user) {
+        if(user != null) {
+            Notifier notifier = new NotifierGUI();
+            user.setNotifier(notifier);
+            activeFriends = FXCollections.observableArrayList();
+            sent = FXCollections.observableArrayList();
+            received = FXCollections.observableArrayList();
+
+            // Configuración de notificaciones de conexión y desconexión de amigos
+            notifier.setNotifyAddActiveFriend(friendName -> {
+                Platform.runLater(() -> activeFriends.add(friendName));
+            });
+            notifier.setNotifyRemoveActiveFriend(friendName -> {
+                Platform.runLater(() -> activeFriends.remove(friendName));
+            });
+            notifier.setNotifyMessage(message -> {
+                Platform.runLater(() -> received.add(message));
+            });
+        }
     }
 
     public static void main(String[] args) {

@@ -4,17 +4,17 @@ import java.util.function.Consumer;
 
 public interface Notifier {
 
-    void setAddActiveFriend(Consumer<String> addActiveFriend);
+    void setNotifyAddActiveFriend(Consumer<String> addActiveFriend);
 
-    void setRemoveActiveFriend(Consumer<String> removeActiveFriend);
+    void setNotifyRemoveActiveFriend(Consumer<String> removeActiveFriend);
 
-    void setMessage(Consumer<String> message);
+    void setNotifyMessage(Consumer<String> message);
 
-    void addActiveFriend(String friendName);
+    void notifyAddActiveFriend(String friendName);
 
-    void removeActiveFriend(String friendName);
+    void notifyRemoveActiveFriend(String friendName);
 
-    void message(String message);
+    void notifyMessage(String message);
 
 
 

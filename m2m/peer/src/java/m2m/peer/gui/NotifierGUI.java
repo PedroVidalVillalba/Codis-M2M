@@ -14,29 +14,29 @@ public class NotifierGUI implements Notifier {
 
     }
 
-    public void setAddActiveFriend(Consumer<String> addActiveFriend){
+    public void setNotifyAddActiveFriend(Consumer<String> addActiveFriend){
         this.addActiveFriend = addActiveFriend;
     }
 
-    public void setRemoveActiveFriend(Consumer<String> removeActiveFriend){
+    public void setNotifyRemoveActiveFriend(Consumer<String> removeActiveFriend){
         this.removeActiveFriend = removeActiveFriend;
     }
 
-    public void setMessage(Consumer<String> message){
+    public void setNotifyMessage(Consumer<String> message){
         this.message = message;
     }
 
 
 
-    public void addActiveFriend(String friendName) {
+    public void notifyAddActiveFriend(String friendName) {
         addActiveFriend.accept(friendName);
     }
 
-    public void removeActiveFriend(String friendName) {
+    public void notifyRemoveActiveFriend(String friendName) {
         removeActiveFriend.accept(friendName);
     }
 
-    public void message(String message) {
+    public void notifyMessage(String message) {
         this.message.accept(message);
     }
 }

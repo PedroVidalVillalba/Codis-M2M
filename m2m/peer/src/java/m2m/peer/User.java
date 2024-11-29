@@ -113,6 +113,7 @@ public class User {
         Peer friend = activeFriends.get(friendName);
         Ephemeral ephemeral = security.generateEphemeral(friend);
         friend.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
+        System.out.println("Saludando a " + friendName);
     }
 
     public void sendMessage(String friendName, String message) throws Exception {
