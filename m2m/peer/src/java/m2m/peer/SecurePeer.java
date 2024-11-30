@@ -145,8 +145,10 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
             SecretKey authenticationKey = security.decrypt(encryptedAuthenticationKeys.get(friendName), server);
             authenticationKeys.put(friendName, authenticationKey);
             chats.put(friendName, new ArrayList<>());
-            notifier.notifyAddActiveFriend(friendName);
+            // Ahora se notifica de todos los amigos conectados a la vez
+            //notifier.notifyAddActiveFriend(friendName);
         }
+        notifier.notifyAllFriendsConnected(String.join(", ", activeFriends.keySet()));
     }
 
     @Override

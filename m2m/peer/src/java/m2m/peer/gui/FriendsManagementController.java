@@ -1,5 +1,6 @@
 package m2m.peer.gui;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -8,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import m2m.peer.Notifier;
 import m2m.peer.PeerMain;
 import m2m.peer.User;
 
@@ -21,7 +23,7 @@ public class FriendsManagementController {
     @FXML
     public Button logoutButton;
     @FXML
-    private ListView<HBox> friendsListView; // Cada amigo es un HBox para icono y botones
+    private ListView<HBox> friendsListView; // Cada amigo es un HBox para nombre y botones
     @FXML
     private TextField searchField;
     @FXML
@@ -54,6 +56,17 @@ public class FriendsManagementController {
         initializeFriends();
         initializePendingRequests();
 
+        // Actualizar el comportamiento del notifier para actualizar las listas de amigos y solicitudes pendientes cuando sea necesario
+        Notifier notifier = user.getNotifier();
+        notifier.setRefreshFriends(friendName -> Platform.runLater(() -> {
+            try {
+                initializeFriends();
+            } catch (Exception exception) {
+                System.err.println(exception.getMessage());
+            }
+        }));
+
+
 
         // Asociar listas observables con las ListView
         friendsListView.setItems(friends);
@@ -78,6 +91,8 @@ public class FriendsManagementController {
                         requestButton.setOnAction(e -> {
                             try {
                                 user.requestFriendship(person);
+                                searchErrorLabel.setText("Solicitud enviada a " + person);
+                                searchErrorLabel.setVisible(true);
                             } catch (Exception exception) {
                                 searchErrorLabel.setText(exception.getMessage());
                                 searchErrorLabel.setVisible(true);
@@ -125,10 +140,15 @@ public class FriendsManagementController {
             nameLabel.setStyle("-fx-font-size: 16px;");
             nameLabel.setPrefWidth(90);
             Label statusLabel = new Label("○");
+            statusLabel.setPrefWidth(45);
             Button removeButton = new Button("Eliminar");
             removeButton.setOnAction(e -> {
                 try {
                     user.removeFriendship(friendName);
+                    friends.removeIf(hbox -> {
+                        Label label = (Label) hbox.getChildren().getFirst();
+                        return label.getText().equals(friendName);
+                    });
                 } catch (Exception exception) {
                     System.err.println("Error al eliminar amigo: " + exception.getMessage());
                     friendsErrorLabel.setText(exception.getMessage());
