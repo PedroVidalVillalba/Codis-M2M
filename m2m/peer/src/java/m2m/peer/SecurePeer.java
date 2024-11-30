@@ -109,16 +109,16 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
     public void message(Peer sender, String message) throws Exception {
         Security.ensureNotNull(sender, message);
 
-        Peer friend = activeFriends.get(sender.getUsername());
-        if (friend == null) {
+        if (!activeFriends.containsValue(sender)) {
             throw new RuntimeException("El emisor del mensaje no está registrado como amigo del receptor");
         }
 
-        String decryptedMessage = security.decrypt(message, friend);
-        List<Message> chat = chats.get(friend.getUsername());
+        String friendName = sender.getUsername();
+        String decryptedMessage = security.decrypt(message, sender);
+        List<Message> chat = chats.get(friendName);
         Message received = new Message(decryptedMessage, MessageType.RECEIVED);
         chat.add(received);
-        notifier.notifyMessage(received);
+        notifier.notifyMessage(received, friendName);
     }
 
     @Override

@@ -1,18 +1,19 @@
 package m2m.peer;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface Notifier {
 
-    void setNotifyAddActiveFriend(Consumer<String> addActiveFriend);
+    void setNotifyAddActiveFriend(Consumer<String> notifyAddActiveFriend);
 
-    void setNotifyRemoveActiveFriend(Consumer<String> removeActiveFriend);
+    void setNotifyRemoveActiveFriend(Consumer<String> notifyRemoveActiveFriend);
 
-    void setNotifyMessage(Consumer<Message> message);
+    void setNotifyMessage(BiConsumer<Message, String> notifyMessage);
 
     void notifyAddActiveFriend(String friendName);
 
     void notifyRemoveActiveFriend(String friendName);
 
-    void notifyMessage(Message message);
+    void notifyMessage(Message message, String friendName);
 }

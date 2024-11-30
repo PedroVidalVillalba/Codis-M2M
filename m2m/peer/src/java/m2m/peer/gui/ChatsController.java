@@ -64,8 +64,8 @@ public class ChatsController {
 
                             /* Establecer el contenido del mensaje */
                             Label label = switch (message.type()) {
-                                case SENT -> (Label) messageContainer.lookup("#receivedMessage");
-                                case RECEIVED -> (Label) messageContainer.lookup("#sentMessage");
+                                case RECEIVED -> (Label) messageContainer.lookup("#receivedMessage");
+                                case SENT -> (Label) messageContainer.lookup("#sentMessage");
                             };
                             label.setText(message.message());
                         } catch (IOException exception) {
@@ -83,6 +83,8 @@ public class ChatsController {
         String friendName = friendsListView.getSelectionModel().getSelectedItem();
         if (friendName == null) return;
 
+        /* TODO: aquí se hace un handshake nuevo cada vez que se abre un chat, incluso que el otro ya estuviera saludado
+             No es necesariamente malo, porque hace que se cambie todavía más a menudo de claves, pero habría que pensar si hace falta */
         try {
             user.greet(friendName);
         } catch (Exception exception) {
@@ -90,10 +92,14 @@ public class ChatsController {
         }
 
         currentFriendChat = friendName;
-        currentChat = FXCollections.observableList(user.getChat(currentFriendChat));
+        currentChat = FXCollections.observableArrayList(user.getChat(currentFriendChat));
         currentChatView.setItems(currentChat);
 
-        notifier.setNotifyMessage(message -> Platform.runLater(() -> currentChat.add(message)));
+        notifier.setNotifyMessage((message, friend) -> Platform.runLater(() -> {
+            if (currentFriendChat != null && currentFriendChat.equals(friend)) {
+                currentChat.add(message);
+            }
+        }));
     }
 
     @FXML

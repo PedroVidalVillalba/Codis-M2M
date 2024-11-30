@@ -12,6 +12,9 @@
            alignment="CENTER_LEFT"
     />
 
+    <!-- Llenar el espacio intermedio para que se alineen bien a los lados -->
+    <Region HBox.hgrow="ALWAYS"/>
+
     <!-- Parte derecha para los mensajes enviados -->
     <Label fx:id="sentMessage"
            alignment="CENTER_RIGHT"

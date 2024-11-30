@@ -49,7 +49,7 @@ public class User {
         this.username = username;
         this.password = Security.digest(password, username);
 
-        List<AuthenticatedServer> authenticatedServers = findServers(this.security);
+        List<AuthenticatedServer> authenticatedServers = findServers();
         for (AuthenticatedServer authenticatedServer : authenticatedServers) {
             PublicKey serverPublicKey = authenticatedServer.serverKey();
             Server server = authenticatedServer.server();
@@ -106,7 +106,7 @@ public class User {
         Message sent = new Message(message, MessageType.SENT);
         chat.add(sent);
         friend.message(this.reference, security.encrypt(message, friend));
-        notifier.notifyMessage(sent);
+        notifier.notifyMessage(sent, friendName);
     }
 
     public void signUp() throws Exception {
@@ -152,7 +152,7 @@ public class User {
     }
 
     /* Métodos privados que facilitan la lógica del código */
-    private static List<AuthenticatedServer> findServers(Security security) throws Exception {
+    private static List<AuthenticatedServer> findServers() throws Exception {
         List<AuthenticatedServer> servers = new ArrayList<>();
         try (InputStream inputStream = User.class.getResourceAsStream(TRUSTED_SERVERS)) {
             if (inputStream == null) {
@@ -176,7 +176,7 @@ public class User {
 
                     Server server;
                     try {
-                        server = serverLookup(host, port, security);
+                        server = serverLookup(host, port);
                     } catch (Exception exception) {
                         /* Si cualquier cosa sale mal, ignoramos */
                         continue;
@@ -191,12 +191,11 @@ public class User {
         return servers;
     }
 
-    private static Server serverLookup(String host, int port, Security security) throws Exception {
+    private static Server serverLookup(String host, int port) throws Exception {
 //        SecurityInjection.set(security);
         Registry registry = LocateRegistry.getRegistry(host, port);
-        Server server = (Server) registry.lookup(Server.RMI_NAME);
+        return  (Server) registry.lookup(Server.RMI_NAME);
 //        SecurityInjection.remove();
-        return server;
     }
 
     private byte[] authenticate(Server.Method method, Object... parameters) throws Exception {

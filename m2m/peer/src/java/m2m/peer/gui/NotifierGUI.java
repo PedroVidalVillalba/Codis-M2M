@@ -3,40 +3,43 @@ package m2m.peer.gui;
 import m2m.peer.Message;
 import m2m.peer.Notifier;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class NotifierGUI implements Notifier {
-    private Consumer<String> addActiveFriend = friendName -> {} ;
-    private Consumer<String> removeActiveFriend = friendName -> {} ;
-    private Consumer<Message> message = message -> {} ;
+    private Consumer<String> notifyAddActiveFriend = friendName -> {} ;
+    private Consumer<String> notifyRemoveActiveFriend = friendName -> {} ;
+    private BiConsumer<Message, String> notifyMessage = (message, friendName) -> {} ;
 
-    public NotifierGUI() {
-
+    @Override
+    public void setNotifyAddActiveFriend(Consumer<String> notifyAddActiveFriend){
+        this.notifyAddActiveFriend = notifyAddActiveFriend;
     }
 
-    public void setNotifyAddActiveFriend(Consumer<String> addActiveFriend){
-        this.addActiveFriend = addActiveFriend;
+    @Override
+    public void setNotifyRemoveActiveFriend(Consumer<String> notifyRemoveActiveFriend){
+        this.notifyRemoveActiveFriend = notifyRemoveActiveFriend;
     }
 
-    public void setNotifyRemoveActiveFriend(Consumer<String> removeActiveFriend){
-        this.removeActiveFriend = removeActiveFriend;
-    }
-
-    public void setNotifyMessage(Consumer<Message> message){
-        this.message = message;
+    @Override
+    public void setNotifyMessage(BiConsumer<Message, String> notifyMessage){
+        this.notifyMessage = notifyMessage;
     }
 
 
 
+    @Override
     public void notifyAddActiveFriend(String friendName) {
-        addActiveFriend.accept(friendName);
+        notifyAddActiveFriend.accept(friendName);
     }
 
+    @Override
     public void notifyRemoveActiveFriend(String friendName) {
-        removeActiveFriend.accept(friendName);
+        notifyRemoveActiveFriend.accept(friendName);
     }
 
-    public void notifyMessage(Message message) {
-        this.message.accept(message);
+    @Override
+    public void notifyMessage(Message message, String friendName) {
+        this.notifyMessage.accept(message, friendName);
     }
 }
