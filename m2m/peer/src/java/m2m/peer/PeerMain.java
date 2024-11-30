@@ -13,13 +13,14 @@ import javafx.stage.Stage;
 import m2m.peer.gui.NotifierGUI;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class PeerMain extends Application {
     private static Stage primaryStage;
     private static User user;
 
-    private static ObservableList<HBox> friends;
+    private static ObservableList<HBox> friends; // Cada amigo es un HBox para nombre y botones
     private static ObservableList<String> activeFriends;
 
     public PeerMain() {}
@@ -79,26 +80,101 @@ public class PeerMain extends Application {
 
         // Configuración de notificaciones de conexión y desconexión de amigos
         notifier.setNotifyAddActiveFriend(friendName -> Platform.runLater(() -> {
-            activeFriends.add(friendName);
+            try {
+                Runtime.getRuntime().exec(new String[] {"notify-send", friendName + " se ha conectado"});
+            } catch (IOException exception) {
+                System.err.println(exception.getMessage());
+            }
 
-            Label nameLabel = new Label(friendName);
+            activeFriends.add(friendName);
+            newActiveFriend(friendName);
+        }));
+
+        notifier.setNotifyRemoveActiveFriend(friendName -> Platform.runLater(() -> {
+            activeFriends.remove(friendName);
+            try {
+                Runtime.getRuntime().exec(new String[] {"notify-send", friendName + " se ha desconectado"});
+            } catch (IOException exception) {
+                System.err.println(exception.getMessage());
+            }
+            // Se quita de amigos y se refresca la lista. Hay dos casos: realmente se ha desconectado, o ha eliminado al usuario de amigos, por eso hay que refrescar
+            friends.removeIf(hbox -> {
+                Label label = (Label) hbox.getChildren().getFirst();
+                return label.getText().equals(friendName);
+            });
+
+            notifier.refreshFriends(friendName);
+
+            /*Label nameLabel = new Label(friendName);
             nameLabel.setStyle("-fx-font-size: 16px;");
             nameLabel.setPrefWidth(90);
-            Label statusLabel = new Label("🟢");
+            Label statusLabel = new Label("○");
+            statusLabel.setPrefWidth(45);
             Button removeButton = new Button("Eliminar");
             removeButton.setOnAction(e -> {
                 try {
                     user.removeFriendship(friendName);
+                    friends.removeIf(hbox -> {
+                        Label label = (Label) hbox.getChildren().getFirst();
+                        return label.getText().equals(friendName);
+                    });
                 } catch (Exception exception) {
                     System.err.println("Error al eliminar amigo: " + exception.getMessage());
                 }
             });
-
             HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
-            friends.add(friendBox);
+            friends.add(friendBox);*/
         }));
-        notifier.setNotifyRemoveActiveFriend(friendName -> Platform.runLater(() -> activeFriends.remove(friendName)));
 
+        notifier.setNotifyAllFriendsConnected(allFriends -> Platform.runLater(() -> {
+            try {
+                if(allFriends.isEmpty()) {
+                    Runtime.getRuntime().exec(new String[] {"notify-send", "No hay amigos conectados"});
+                } else {
+                    Runtime.getRuntime().exec(new String[] {"notify-send", "Amigos conectados: " + allFriends});
+                    String[] friendNames = allFriends.split(", ");
+                    System.out.println(Arrays.toString(friendNames));
+                    for (String friendName : friendNames) {
+                        activeFriends.add(friendName);
+                        newActiveFriend(friendName);
+                    }
+                }
+            } catch (IOException exception) {
+                System.err.println(exception.getMessage());
+            }
+
+
+        }));
+
+    }
+
+    // Elimina al amigo de la lista (por si apareciese como desconectado), y lo añade como conectado
+    private static void newActiveFriend(String friendName) {
+        friends.removeIf(hbox -> {
+            Label label = (Label) hbox.getChildren().getFirst();
+            return label.getText().equals(friendName);
+        });
+
+        Label nameLabel = new Label(friendName);
+        nameLabel.setStyle("-fx-font-size: 16px;");
+        nameLabel.setPrefWidth(90);
+        Label statusLabel = new Label("🟢");
+        statusLabel.setPrefWidth(45);
+        Button removeButton = new Button("Eliminar");
+        removeButton.setOnAction(e -> {
+            try {
+                user.removeFriendship(friendName);
+                friends.removeIf(hbox -> {
+                    Label label = (Label) hbox.getChildren().getFirst();
+                    return label.getText().equals(friendName);
+                });
+            } catch (Exception exception) {
+                System.err.println("Error al eliminar amigo: " + exception.getMessage());
+            }
+        });
+
+        HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
+        friends.addFirst(friendBox);
     }
 
     public static void main(String[] args) {

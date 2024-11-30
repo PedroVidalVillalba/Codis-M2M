@@ -129,6 +129,7 @@ public class User {
 
     public void acceptFriendship(String friend) throws Exception {
         server.friendAccept(this.reference, friend, authenticate(Server.Method.FRIEND_ACCEPT, friend));
+        notifier.refreshFriends(friend);
     }
 
     public void rejectFriendship(String friend) throws Exception {
