@@ -78,22 +78,6 @@ public class User {
         return reference;
     }
 
-    public Security getSecurity() {
-        return security;
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    public Map<String, Peer> getActiveFriends() {
-        return activeFriends;
-    }
-
-    public Map<String, List<Message>> getChats() {
-        return chats;
-    }
-
     public List<Message> getChat(String friend) {
         return chats.get(friend);
     }
@@ -104,8 +88,8 @@ public class User {
 
     public void setNotifier(Notifier notifier) {
         this.notifier = notifier;
-        if(reference instanceof SecurePeer) {
-            ((SecurePeer) reference).setNotifier(notifier);
+        if (reference instanceof SecurePeer securePeer) {
+            securePeer.setNotifier(notifier);
         }
     }
 
@@ -114,14 +98,15 @@ public class User {
         Peer friend = activeFriends.get(friendName);
         Ephemeral ephemeral = security.generateEphemeral(friend);
         friend.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
-        // System.out.println("Saludando a " + friendName);
     }
 
     public void sendMessage(String friendName, String message) throws Exception {
         Peer friend = activeFriends.get(friendName);
         List<Message> chat = chats.get(friendName);
-        chat.add(new Message(message, MessageType.SENT));
+        Message sent = new Message(message, MessageType.SENT);
+        chat.add(sent);
         friend.message(this.reference, security.encrypt(message, friend));
+        notifier.notifyMessage(sent);
     }
 
     public void signUp() throws Exception {

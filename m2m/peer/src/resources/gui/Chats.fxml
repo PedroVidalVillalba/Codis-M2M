@@ -25,17 +25,12 @@
                 </ScrollPane>
             </VBox>
 
-
             <!-- Conversación del amigo seleccionado -->
             <VBox prefWidth="550" spacing="10">
                 <!-- Mensajes recibidos y enviados -->
-                <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
-                    <!-- Mensajes recibidos -->
-                    <ListView fx:id="receivedMessages" />
-
-                    <!-- Mensajes enviados -->
-                    <ListView fx:id="sentMessages" />
-                </SplitPane>
+                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+                    <ListView fx:id="currentChatView"/>
+                </ScrollPane>
 
                 <!-- Campo de texto y botón para enviar -->
                 <HBox spacing="10">

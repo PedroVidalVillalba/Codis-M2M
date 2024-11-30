@@ -51,7 +51,6 @@ public class FriendsManagementController {
         searchResults = FXCollections.observableArrayList();
         friendRequests = FXCollections.observableArrayList();
 
-
         initializeFriends();
         initializePendingRequests();
 
@@ -59,9 +58,6 @@ public class FriendsManagementController {
         // Asociar listas observables con las ListView
         friendsListView.setItems(friends);
         friendRequestsListView.setItems(friendRequests);
-
-
-
     }
 
     public void searchForPeople() {
@@ -112,11 +108,11 @@ public class FriendsManagementController {
     public void handleLogout() throws Exception {
         user.logout();
         PeerMain.setUser(null);
-        PeerMain.setRoot("gui/Login.fxml");  // Volver al login
+        PeerMain.setRoot("/gui/Login.fxml");  // Volver al login
     }
 
     public void handleChats() {
-        PeerMain.setRoot("gui/Chats.fxml");  // Cambiar a la pestaña de chats
+        PeerMain.setRoot("/gui/Chats.fxml");  // Cambiar a la pestaña de chats
     }
 
     private void initializeFriends() throws Exception {
@@ -186,8 +182,6 @@ public class FriendsManagementController {
             friendRequests.add(requestBox);
         }
     }
-
-
 
 
     private List<String> checkAddedFriends() {

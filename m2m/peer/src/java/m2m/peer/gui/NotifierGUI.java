@@ -1,5 +1,6 @@
 package m2m.peer.gui;
 
+import m2m.peer.Message;
 import m2m.peer.Notifier;
 
 import java.util.function.Consumer;
@@ -7,8 +8,7 @@ import java.util.function.Consumer;
 public class NotifierGUI implements Notifier {
     private Consumer<String> addActiveFriend = friendName -> {} ;
     private Consumer<String> removeActiveFriend = friendName -> {} ;
-    private Consumer<String> message = message -> {} ;
-
+    private Consumer<Message> message = message -> {} ;
 
     public NotifierGUI() {
 
@@ -22,7 +22,7 @@ public class NotifierGUI implements Notifier {
         this.removeActiveFriend = removeActiveFriend;
     }
 
-    public void setNotifyMessage(Consumer<String> message){
+    public void setNotifyMessage(Consumer<Message> message){
         this.message = message;
     }
 
@@ -36,7 +36,7 @@ public class NotifierGUI implements Notifier {
         removeActiveFriend.accept(friendName);
     }
 
-    public void notifyMessage(String message) {
+    public void notifyMessage(Message message) {
         this.message.accept(message);
     }
 }

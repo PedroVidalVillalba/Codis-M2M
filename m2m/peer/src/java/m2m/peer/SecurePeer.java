@@ -116,8 +116,9 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
 
         String decryptedMessage = security.decrypt(message, friend);
         List<Message> chat = chats.get(friend.getUsername());
-        chat.add(new Message(decryptedMessage, MessageType.RECEIVED));
-        notifier.notifyMessage(message);
+        Message received = new Message(decryptedMessage, MessageType.RECEIVED);
+        chat.add(received);
+        notifier.notifyMessage(received);
     }
 
     @Override
@@ -131,7 +132,6 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         authenticationKeys.put(friendName, authenticationKey);
         chats.put(friendName, new ArrayList<>());
         notifier.notifyAddActiveFriend(friendName);
-        // System.out.println("Añadido amigo " + friendName);
     }
 
     @Override
@@ -146,7 +146,6 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
             authenticationKeys.put(friendName, authenticationKey);
             chats.put(friendName, new ArrayList<>());
             notifier.notifyAddActiveFriend(friendName);
-            // System.out.println("Añadido amigo " + friendName);
         }
     }
 

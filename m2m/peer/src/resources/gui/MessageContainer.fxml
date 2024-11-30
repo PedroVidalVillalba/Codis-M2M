@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="5">
+
+    <!-- Parte izquierda para los mensajes recibidos -->
+    <Label fx:id="receivedMessage"
+           alignment="CENTER_LEFT"
+    />
+
+    <!-- Parte derecha para los mensajes enviados -->
+    <Label fx:id="sentMessage"
+           alignment="CENTER_RIGHT"
+    />
+</HBox>

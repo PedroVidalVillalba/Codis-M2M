@@ -21,19 +21,17 @@ public class PeerMain extends Application {
 
     private static ObservableList<HBox> friends;
     private static ObservableList<String> activeFriends;
-    private static ObservableList<String> received;
-    private static ObservableList<String> sent;
 
     public PeerMain() {}
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("gui/Login.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/Login.fxml"));
         Scene scene = new Scene(loader.load());
 
         primaryStage = stage;
         stage.setOnCloseRequest(event -> {
-            if(user != null) {
+            if (user != null) {
                 try {
                     user.logout();
                 } catch (Exception e) {
@@ -43,7 +41,7 @@ public class PeerMain extends Application {
             System.exit(0);
         });
 
-        stage.setTitle("Aplicación P2P segura");
+        stage.setTitle("M2M");
         stage.setScene(scene);
         stage.show();
     }
@@ -51,8 +49,8 @@ public class PeerMain extends Application {
     public static void setRoot(String fxml) {
         try {
             primaryStage.setScene(new Scene(FXMLLoader.load(Objects.requireNonNull(PeerMain.class.getResource(fxml)))));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+        } catch (IOException exception) {
+            System.err.println(exception.getMessage());
         }
     }
 
@@ -72,52 +70,35 @@ public class PeerMain extends Application {
         return activeFriends;
     }
 
-    public static ObservableList<String> getReceived() {
-        return received;
-    }
-
-    public static ObservableList<String> getSent() {
-        return sent;
-    }
-
     public static void initializeNotifier (User user) {
-        if(user != null) {
-            Notifier notifier = new NotifierGUI();
-            user.setNotifier(notifier);
-            activeFriends = FXCollections.observableArrayList();
-            sent = FXCollections.observableArrayList();
-            received = FXCollections.observableArrayList();
-            friends = FXCollections.observableArrayList();
+        if (user == null) return;
+        Notifier notifier = new NotifierGUI();
+        user.setNotifier(notifier);
+        activeFriends = FXCollections.observableArrayList();
+        friends = FXCollections.observableArrayList();
 
-            // Configuración de notificaciones de conexión y desconexión de amigos
-            notifier.setNotifyAddActiveFriend(friendName -> {
-                Platform.runLater(() -> {
-                    activeFriends.add(friendName);
+        // Configuración de notificaciones de conexión y desconexión de amigos
+        notifier.setNotifyAddActiveFriend(friendName -> Platform.runLater(() -> {
+            activeFriends.add(friendName);
 
-                    Label nameLabel = new Label(friendName);
-                    nameLabel.setStyle("-fx-font-size: 16px;");
-                    nameLabel.setPrefWidth(90);
-                    Label statusLabel = new Label("🟢");
-                    Button removeButton = new Button("Eliminar");
-                    removeButton.setOnAction(e -> {
-                        try {
-                            user.removeFriendship(friendName);
-                        } catch (Exception exception) {
-                            System.err.println("Error al eliminar amigo: " + exception.getMessage());
-                        }
-                    });
+            Label nameLabel = new Label(friendName);
+            nameLabel.setStyle("-fx-font-size: 16px;");
+            nameLabel.setPrefWidth(90);
+            Label statusLabel = new Label("🟢");
+            Button removeButton = new Button("Eliminar");
+            removeButton.setOnAction(e -> {
+                try {
+                    user.removeFriendship(friendName);
+                } catch (Exception exception) {
+                    System.err.println("Error al eliminar amigo: " + exception.getMessage());
+                }
+            });
 
-                    HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
-                    friends.add(friendBox);
-                });
-            });
-            notifier.setNotifyRemoveActiveFriend(friendName -> {
-                Platform.runLater(() -> activeFriends.remove(friendName));
-            });
-            notifier.setNotifyMessage(message -> {
-                Platform.runLater(() -> received.add(message));
-            });
-        }
+            HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
+            friends.add(friendBox);
+        }));
+        notifier.setNotifyRemoveActiveFriend(friendName -> Platform.runLater(() -> activeFriends.remove(friendName)));
+
     }
 
     public static void main(String[] args) {

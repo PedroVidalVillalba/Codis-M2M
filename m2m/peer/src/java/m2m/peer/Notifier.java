@@ -8,14 +8,11 @@ public interface Notifier {
 
     void setNotifyRemoveActiveFriend(Consumer<String> removeActiveFriend);
 
-    void setNotifyMessage(Consumer<String> message);
+    void setNotifyMessage(Consumer<Message> message);
 
     void notifyAddActiveFriend(String friendName);
 
     void notifyRemoveActiveFriend(String friendName);
 
-    void notifyMessage(String message);
-
-
-
+    void notifyMessage(Message message);
 }
