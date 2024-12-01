@@ -164,6 +164,14 @@ public class SecurePeer extends UnicastRemoteObject implements Peer {
         notifier.notifyRemoveActiveFriend(friendName);
     }
 
+    @Override
+    public void friendRequestReceived(String person, byte[] authentication) throws Exception {
+        Security.ensureNotNull(person, authentication);
+        verifyServerAuthentication(authentication, Method.FRIEND_REQUEST_RECEIVED, person);
+
+        notifier.notifyNewFriendRequest(person);
+    }
+
     private void verifyServerAuthentication(byte[] authentication, Peer.Method method, Object... parameters) throws Exception {
         byte[] nonce = Security.extractNonce(authentication);
         byte[] encryptedAuthentication = Security.removeNonce(authentication);

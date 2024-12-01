@@ -110,6 +110,9 @@ public class DataBase {
         if(username.length() < MIN_USERNAME_LENGTH) {
             throw new SQLException("El nombre de usuario " + username + " es demasiado corto. La longitud mínima es " + MIN_USERNAME_LENGTH + " caracteres");
         }
+        if (username.contains(",")) {
+            throw new SQLException("El nombre de usuario no puede contener \",\"");
+        }
 
         ArrayList<String> users = getUsers();
         // Comprobación de que no existe un usuario registrado con el mismo nombre

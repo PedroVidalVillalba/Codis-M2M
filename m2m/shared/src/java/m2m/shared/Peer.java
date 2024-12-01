@@ -9,7 +9,7 @@ import java.util.Map;
 public interface Peer extends Remote {
     /* Enumeración con los métodos proporcionados por el usuario al servidor, con fines de autenticación */
     enum Method {
-        ADD_ACTIVE_FRIEND, REMOVE_ACTIVE_FRIEND
+        ADD_ACTIVE_FRIEND, REMOVE_ACTIVE_FRIEND, FRIEND_REQUEST_RECEIVED
     }
 
     /**
@@ -73,4 +73,12 @@ public interface Peer extends Remote {
      * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
      */
     void removeActiveFriend(Peer friend, byte[] authentication) throws Exception;
+
+    /**
+     * Indica al usuario que ha recibido una nueva solicitud de amistad. Método a ser llamado por un servidor.
+     * @param person Nombre de la persona que le envió la solicitud.
+     * @param authentication Código de autenticación del servidor.
+     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     */
+    void friendRequestReceived(String person, byte[] authentication) throws Exception;
 }
