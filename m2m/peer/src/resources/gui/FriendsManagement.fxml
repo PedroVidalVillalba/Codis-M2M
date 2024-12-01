@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
-
-
-<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m2m.peer.gui.FriendsManagementController">
+<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="m2m.peer.gui.FriendsManagementController"
+            styleClass="pane">
     <!-- Barra superior con botones -->
     <top>
         <ToolBar>
-            <Button fx:id="chatsButton" onAction="#handleChats" text="󰭹" />
-            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰠜" />
+            <Button fx:id="chatsButton" onAction="#handleChats" text="🗪" />
+            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰍃" />
         </ToolBar>
     </top>
 
@@ -35,7 +34,7 @@
                 <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Buscar personas" />
                 <HBox spacing="5" alignment="CENTER">
                     <TextField fx:id="searchField" promptText="Nombre de usuario" />
-                    <Button text="Buscar" onAction="#searchForPeople" />
+                    <Button text="󰀖" onAction="#searchForPeople" />
                 </HBox>
                 <ListView fx:id="searchResultsListView" VBox.vgrow="ALWAYS" />
                 <Label fx:id="searchErrorLabel" />
@@ -52,4 +51,11 @@
             </VBox>
         </HBox>
     </center>
+
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+        <URL value="@/gui/styles/text-field.css"/>
+        <URL value="@/gui/styles/button.css"/>
+        <URL value="@/gui/styles/list-view.css"/>
+    </stylesheets>
 </BorderPane>

@@ -141,7 +141,7 @@ public class FriendsManagementController {
             nameLabel.setPrefWidth(90);
             Label statusLabel = new Label("○");
             statusLabel.setPrefWidth(45);
-            Button removeButton = new Button("Eliminar");
+            Button removeButton = new Button("󰀒");
             removeButton.setOnAction(e -> {
                 try {
                     user.removeFriendship(friendName);
@@ -167,8 +167,8 @@ public class FriendsManagementController {
             Label nameLabel = new Label(person);
             nameLabel.setStyle("-fx-font-size: 16px;");
             nameLabel.setPrefWidth(140);
-            Button acceptButton = new Button("✔");
-            Button rejectButton = new Button("✖");
+            Button acceptButton = new Button("");
+            Button rejectButton = new Button("❌");
 
             acceptButton.setOnAction(e -> {
                 try {

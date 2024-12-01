@@ -1,0 +1,27 @@
+@import url("/gui/styles/colors.css");
+
+.text-field {
+    -fx-background-radius: 3;
+    -fx-background-color: -fx--surface-1;
+    -fx-text-fill: -fx--text;
+    -fx-highlight-fill: -fx--blue;
+    -fx-highlight-text-fill: -fx--base;
+}
+.text-field:focused {
+    -fx-border-color: -fx--blue;
+    -fx-text-fill: -fx--text;
+    -fx-border-radius: 3;
+    -fx-border-width: 3;
+}
+
+.error-text-field {
+    -fx-background-color: -fx--overlay-0;
+    -fx-text-fill: -fx--red;
+    -fx-border-color: -fx--red;
+    -fx-border-radius: 3;
+}
+.error-text-field:focused {
+    -fx-border-color: -fx--red;
+    -fx-border-radius: 3;
+    -fx-border-width: 3;
+}

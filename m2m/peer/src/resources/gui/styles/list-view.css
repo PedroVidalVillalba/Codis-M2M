@@ -1,0 +1,69 @@
+@import url("/gui/styles/colors.css");
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.list-view .corner {
+    -fx-background-color: transparent;
+}
+
+.list-cell {
+    -fx-text-fill: -fx--text;
+}
+
+.list-cell:odd {
+    -fx-background-color: -fx--overlay-1;
+}
+
+.list-cell:even {
+    -fx-background-color: -fx--overlay-2;
+}
+
+.list-cell:hover, .list-cell:selected {
+    -fx-background-color: -fx--teal;
+    -fx-text-fill: -fx--crust;
+    -fx-cursor: hand;
+}
+
+.list-view .scroll-bar {
+    -fx-background-color: -fx--base;
+}
+
+.list-view .scroll-bar .thumb {
+    -fx-background-color: -fx--teal;
+}
+.list-view .scroll-bar .track {
+    -fx-background-color: -fx--base;
+}
+
+.list-view .scroll-pane .corner, .list-view .scroll-pane .filler {
+    -fx-background-color: transparent;
+}
+
+
+.list-view .scroll-bar .increment-button,
+.list-view .scroll-bar .decrement-button {
+    -fx-background-color: -fx--base;
+    -fx-background-insets: 0;
+}
+
+.list-view .scroll-bar .increment-button:hover,
+.list-view .scroll-bar .increment-button:focused,
+.list-view .scroll-bar .decrement-button:hover,
+.list-view .scroll-bar .decrement-button:focused {
+    -fx-background-color: -fx--teal;
+    -fx-background-insets: 0;
+}
+
+.list-view .scroll-bar .increment-arrow,
+.list-view .scroll-bar .decrement-arrow {
+    -fx-background-color: -fx--text;
+}
+
+.list-view .scroll-bar .increment-button:hover .increment-arrow,
+.list-view .scroll-bar .decrement-button:hover .decrement-arrow,
+.list-view .scroll-bar .increment-button:focused .increment-arrow,
+.list-view .scroll-bar .decrement-button:focused .decrement-arrow {
+    -fx-background-color: -fx--crust;
+}

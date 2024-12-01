@@ -1,0 +1,34 @@
+@import url("/gui/styles/colors.css");
+
+.pane {
+    -fx-background-color: -fx--base;
+    -fx-font-size: 16;
+}
+
+.split-pane {
+    -fx-background-color: -fx--base;
+}
+
+.scroll-pane {
+    -fx-background-color: -fx--base;
+}
+
+.tool-bar {
+    -fx-background-color: -fx--surface-0;
+}
+
+.label {
+    -fx-text-fill: -fx--text;
+    -fx-text-alignment: center;
+}
+
+.title-label {
+    -fx-font-size: 25;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-text-fill: -fx--text;
+}
+
+.error-label {
+    -fx-text-fill: -fx--red;
+}

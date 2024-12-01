@@ -2,8 +2,12 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m2m.peer.gui.LoginController">
+<AnchorPane xmlns="http://javafx.com/javafx/11.0.14-internal"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="m2m.peer.gui.LoginController"
+            styleClass="pane" >
     <VBox alignment="CENTER" layoutX="-104.0" layoutY="-108.0" prefHeight="508.0" prefWidth="704.0" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="-108.0">
 
         <!-- Campos de Usuario y Contraseña -->
@@ -15,14 +19,6 @@
             <!-- Contraseña -->
             <Label alignment="CENTER_RIGHT" text="Contraseña:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
             <PasswordField fx:id="passwordField" prefHeight="24.0" prefWidth="200.0" promptText="Ingresa tu contraseña" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-         <columnConstraints>
-            <ColumnConstraints />
-            <ColumnConstraints />
-         </columnConstraints>
-         <rowConstraints>
-            <RowConstraints />
-            <RowConstraints />
-         </rowConstraints>
         </GridPane>
 
         <!-- Botones -->
@@ -32,6 +28,12 @@
         </HBox>
 
         <!-- Etiqueta de Error -->
-        <Label fx:id="errorLabel" />
+        <Label fx:id="errorLabel" styleClass="error-label" />
     </VBox>
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+        <URL value="@/gui/styles/text-field.css"/>
+        <URL value="@/gui/styles/button.css"/>
+    </stylesheets>
 </AnchorPane>
+

@@ -1,0 +1,11 @@
+@import url("/gui/styles/colors.css");
+
+.message-sent {
+    -fx-background-color: -fx--green;
+    -fx-text-fill: -fx--crust;
+}
+
+.message-received {
+    -fx-background-color: -fx--sapphire;
+    -fx-text-fill: -fx--crust;
+}

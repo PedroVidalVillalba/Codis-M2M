@@ -1,0 +1,18 @@
+@import url("/gui/styles/colors.css");
+
+.button {
+    -fx-border-radius: 5;
+    -fx-background-color: -fx--blue;
+    -fx-text-fill: -fx--crust;
+}
+
+.button:hover, .button:focused {
+    -fx-background-color: -fx--teal;
+    -fx-text-fill: -fx--crust;
+    -fx-cursor: hand;
+}
+
+.button:pressed {
+    -fx-background-color: -fx--teal;
+    -fx-text-fill: -fx--crust;
+}

@@ -1,0 +1,28 @@
+* {
+    -fx--rosewater: #f5e0dc;
+    -fx--flamingo: #f2cdcd;
+    -fx--pink: #f5c2e7;
+    -fx--mauve: #cba6f7;
+    -fx--red: #f38ba8;
+    -fx--maroon: #eba0ac;
+    -fx--peach: #fab387;
+    -fx--yellow: #f9e2af;
+    -fx--green: #a6e3a1;
+    -fx--teal: #94e2d5;
+    -fx--sky: #89dceb;
+    -fx--sapphire: #74c7ec;
+    -fx--blue: #89b4fa;
+    -fx--lavender: #b4befe;
+    -fx--text: #cdd6f4;
+    -fx--subtext-1: #bac2de;
+    -fx--subtext-0: #a6adc8;
+    -fx--overlay-2: #9399b2;
+    -fx--overlay-1: #7f849c;
+    -fx--overlay-0: #6c7086;
+    -fx--surface-2: #585b70;
+    -fx--surface-1: #45475a;
+    -fx--surface-0: #313244;
+    -fx--base: #1e1e2e;
+    -fx--mantle: #181825;
+    -fx--crust: #11111b;
+}

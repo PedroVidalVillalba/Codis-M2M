@@ -2,14 +2,18 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
-<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m2m.peer.gui.ChatsController">
+<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="m2m.peer.gui.ChatsController"
+            styleClass="pane">
 
     <!-- Barra superior con botones -->
     <top>
-        <ToolBar>
+        <ToolBar styleClass="tool-bar">
             <Button fx:id="friendsButton" onAction="#handleFriends" text="󰣐" />
-            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰠜" />
+            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰍃" />
         </ToolBar>
     </top>
 
@@ -19,8 +23,8 @@
 
             <!-- Lista de amigos -->
             <VBox prefWidth="250" spacing="10">
-                <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-alignment: center; -fx-alignment: center;" text="Amigos" />
-                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <Label styleClass="title-label" text="Amigos" alignment="CENTER"/>
+                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="pane">
                     <ListView fx:id="friendsListView" onMouseClicked="#loadChat" prefHeight="525.0" prefWidth="236.0" />
                 </ScrollPane>
             </VBox>
@@ -28,16 +32,23 @@
             <!-- Conversación del amigo seleccionado -->
             <VBox prefWidth="550" spacing="10">
                 <!-- Mensajes recibidos y enviados -->
-                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="pane">
                     <ListView fx:id="currentChatView"/>
                 </ScrollPane>
 
                 <!-- Campo de texto y botón para enviar -->
-                <HBox spacing="10">
+                <HBox spacing="10" styleClass="pane">
                     <TextField fx:id="messageField" promptText="Escribe un mensaje..." HBox.hgrow="ALWAYS" />
-                    <Button onAction="#handleSendMessage" text="Enviar" />
+                    <Button onAction="#handleSendMessage" text="󰒊" />
                 </HBox>
             </VBox>
         </SplitPane>
     </center>
+
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+        <URL value="@/gui/styles/text-field.css"/>
+        <URL value="@/gui/styles/button.css"/>
+        <URL value="@/gui/styles/list-view.css"/>
+    </stylesheets>
 </BorderPane>
