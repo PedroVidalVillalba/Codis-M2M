@@ -20,7 +20,6 @@
     <!-- Contenido principal -->
     <center>
         <SplitPane dividerPositions="0.3">
-
             <!-- Lista de amigos -->
             <VBox prefWidth="250" spacing="10">
                 <Label styleClass="title-label" text="Amigos" alignment="CENTER"/>
@@ -33,7 +32,7 @@
             <VBox prefWidth="550" spacing="10">
                 <!-- Mensajes recibidos y enviados -->
                 <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="pane">
-                    <ListView fx:id="currentChatView"/>
+                    <ListView fx:id="currentChatView" styleClass="chat"/>
                 </ScrollPane>
 
                 <!-- Campo de texto y botón para enviar -->
@@ -50,5 +49,6 @@
         <URL value="@/gui/styles/text-field.css"/>
         <URL value="@/gui/styles/button.css"/>
         <URL value="@/gui/styles/list-view.css"/>
+        <URL value="@/gui/styles/message.css"/>
     </stylesheets>
 </BorderPane>

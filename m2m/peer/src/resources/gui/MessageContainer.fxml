@@ -6,8 +6,7 @@
 <?import java.net.URL?>
 <HBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      spacing="5"
-      styleClass="pane">
+      spacing="5">
 
     <!-- Parte izquierda para los mensajes recibidos -->
     <Label fx:id="receivedMessage"

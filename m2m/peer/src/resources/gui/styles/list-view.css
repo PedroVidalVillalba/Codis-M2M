@@ -1,7 +1,7 @@
 @import url("/gui/styles/colors.css");
 
 .list-view {
-    -fx-background-color: transparent;
+    -fx-background-color: -fx--base;
     -fx-border-color: transparent;
 }
 .list-view .corner {
@@ -9,21 +9,28 @@
 }
 
 .list-cell {
+    -fx-border-color: -fx--crust;
+    -fx-background-color: transparent;
     -fx-text-fill: -fx--text;
 }
 
-.list-cell:odd {
-    -fx-background-color: -fx--overlay-1;
-}
-
-.list-cell:even {
-    -fx-background-color: -fx--overlay-2;
-}
-
-.list-cell:hover, .list-cell:selected {
-    -fx-background-color: -fx--teal;
-    -fx-text-fill: -fx--crust;
+.list-cell:hover {
+    -fx-background-color: -fx--surface-0;
+    -fx-text-fill: -fx--text;
     -fx-cursor: hand;
+}
+.list-cell:selected {
+    -fx-background-color: -fx--blue;
+    -fx-text-fill: -fx--crust;
+}
+.list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.list-cell:empty:hover {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: default;
 }
 
 .list-view .scroll-bar {

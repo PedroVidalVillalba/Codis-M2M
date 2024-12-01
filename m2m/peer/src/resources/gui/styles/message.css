@@ -1,5 +1,14 @@
 @import url("/gui/styles/colors.css");
 
+.chat .list-cell {
+    -fx-border-color: transparent;
+    -fx-background-color: -fx--base;
+}
+
+.chat .list-cell:hover, .chat .list-cell:selected {
+    -fx-cursor: pointer;
+}
+
 .message-sent {
     -fx-background-color: -fx--green;
     -fx-text-fill: -fx--crust;

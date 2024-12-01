@@ -8,6 +8,9 @@
 .split-pane {
     -fx-background-color: -fx--base;
 }
+.split-pane > .split-pane-divider {
+    -fx-background-color: -fx--surface-0;
+}
 
 .scroll-pane {
     -fx-background-color: -fx--base;
