@@ -4,12 +4,15 @@ import javafx.application.Platform;
 import javafx.collections.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.skin.ListViewSkin;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import m2m.peer.*;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 public class ChatsController {
     @FXML
@@ -26,6 +29,7 @@ public class ChatsController {
     private ObservableList<Message> currentChat;
     private String currentFriendChat;
     private User user;
+    private ObservableSet<String> messagePending;
     private Notifier notifier;
 
 
@@ -36,46 +40,83 @@ public class ChatsController {
 
         friendsListView.setItems(PeerMain.getActiveFriends());
         currentFriendChat = null;
-
-        currentChatView.setCellFactory(new Callback<>() {
-            @Override
-            public ListCell<Message> call(ListView<Message> messageListView) {
-                return new ListCell<>() {
-                    @Override
-                    protected void updateItem(Message message, boolean empty) {
-                        super.updateItem(message, empty);
-                        if (empty || message == null) {
-                            setText(null);
-                            setGraphic(null);
-                        } else {
-                            /* Cargar el FXML del contenedor del mensaje */
-                            HBox messageContainer = loadMessageContainer(message);
-                            setGraphic(messageContainer);
-                        }
-                    }
-
-                    private HBox loadMessageContainer(Message message) {
-                        HBox messageContainer = new HBox();
-                        /* Cargar el FXML para el contenedor del mensaje */
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/MessageContainer.fxml"));
-                            loader.setController(this);
-                            messageContainer = loader.load();
-
-                            /* Establecer el contenido del mensaje */
-                            Label label = switch (message.type()) {
-                                case RECEIVED -> (Label) messageContainer.lookup("#receivedMessage");
-                                case SENT -> (Label) messageContainer.lookup("#sentMessage");
-                            };
-                            label.setText(message.message());
-                        } catch (IOException exception) {
-                            System.err.println(exception.getMessage());
-                        }
-                        return messageContainer;
-                    }
-                };
+        /* Añadir una lista de los amigos con mensajes pendientes y un listener para actualizar la vista */
+        messagePending = FXCollections.observableSet(new HashSet<>());
+        messagePending.addListener((SetChangeListener<String>) change -> {
+            if (change.wasAdded() || change.wasRemoved()) {
+                Platform.runLater(() -> friendsListView.refresh());
             }
         });
+
+        currentChatView.setCellFactory(messageListView -> new ListCell<>() {
+            @Override
+            protected void updateItem(Message message, boolean empty) {
+                super.updateItem(message, empty);
+                if (empty || message == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    /* Cargar el FXML del contenedor del mensaje */
+                    HBox messageContainer = loadMessageContainer(message);
+                    setGraphic(messageContainer);
+                }
+            }
+
+            private HBox loadMessageContainer(Message message) {
+                HBox messageContainer = new HBox();
+                /* Cargar el FXML para el contenedor del mensaje */
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/MessageContainer.fxml"));
+                    loader.setController(this);
+                    messageContainer = loader.load();
+
+                    /* Establecer el contenido del mensaje */
+                    Label label = switch (message.type()) {
+                        case RECEIVED -> (Label) messageContainer.lookup("#receivedMessage");
+                        case SENT -> (Label) messageContainer.lookup("#sentMessage");
+                    };
+                    label.setText(message.message());
+                } catch (IOException exception) {
+                    System.err.println(exception.getMessage());
+                }
+                return messageContainer;
+            }
+        });
+
+        friendsListView.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(String friend, boolean empty) {
+                super.updateItem(friend, empty);
+                if (empty || friend == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(friend);
+                    if (messagePending.contains(friend)) {
+                        if (!getStyleClass().contains("message-pending")) {
+                            getStyleClass().add("message-pending");
+                        }
+                    } else {
+                        getStyleClass().remove("message-pending");
+                    }
+                }
+            }
+        });
+
+        /* Notificación por defecto si aún no entró a ningún chat */
+        notifier.setNotifyMessage((message, friend) -> Platform.runLater(() -> {
+            if (friendsListView.getItems().contains(friend)) {
+                messagePending.add(friend);
+            }
+
+            if (!friendsListView.getScene().getWindow().isShowing()) {
+                try {
+                    Runtime.getRuntime().exec(new String[] {"notify-send", friend + ": " + message.message()});
+                } catch (IOException exception) {
+                    System.err.println(exception.getMessage());
+                }
+            }
+        }));
     }
 
     @FXML
@@ -94,10 +135,21 @@ public class ChatsController {
         currentFriendChat = friendName;
         currentChat = FXCollections.observableArrayList(user.getChat(currentFriendChat));
         currentChatView.setItems(currentChat);
+        messagePending.remove(currentFriendChat);
 
         notifier.setNotifyMessage((message, friend) -> Platform.runLater(() -> {
             if (currentFriendChat != null && currentFriendChat.equals(friend)) {
                 currentChat.add(message);
+            } else if (friendsListView.getItems().contains(friend)) {
+                messagePending.add(friend);
+            }
+
+            if (!friendsListView.getScene().getWindow().isShowing()) {
+                try {
+                    Runtime.getRuntime().exec(new String[] {"notify-send", friend + ": " + message.message()});
+                } catch (IOException exception) {
+                    System.err.println(exception.getMessage());
+                }
             }
         }));
     }

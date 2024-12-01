@@ -18,3 +18,9 @@
     -fx-background-color: -fx--sapphire;
     -fx-text-fill: -fx--crust;
 }
+
+.message-pending {
+    -fx-background-color: -fx--teal;
+    -fx-border-color: -fx--crust;
+    -fx-text-fill: -fx--crust;
+}
