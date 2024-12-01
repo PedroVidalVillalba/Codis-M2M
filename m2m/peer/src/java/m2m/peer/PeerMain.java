@@ -5,10 +5,13 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import m2m.peer.gui.NotifierGUI;
 
@@ -155,9 +158,10 @@ public class PeerMain extends Application {
 
         Label nameLabel = new Label(friendName);
         nameLabel.setStyle("-fx-font-size: 16px;");
-        nameLabel.setPrefWidth(90);
-        Label statusLabel = new Label("🟢");
-        statusLabel.setPrefWidth(45);
+        nameLabel.setPrefWidth(90); // Ancho mínimo
+        Circle status = new Circle();
+        status.setRadius(11);
+        status.setFill(Color.GREEN);
         Button removeButton = new Button("󰀒");
         removeButton.setOnAction(e -> {
             try {
@@ -170,8 +174,11 @@ public class PeerMain extends Application {
                 System.err.println("Error al eliminar amigo: " + exception.getMessage());
             }
         });
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
+        HBox friendBox = new HBox(10, nameLabel, spacer, status, removeButton);
+        friendBox.setAlignment(Pos.CENTER);
         friends.addFirst(friendBox);
     }
 

@@ -4,11 +4,16 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import m2m.peer.Notifier;
 import m2m.peer.PeerMain;
 import m2m.peer.User;
@@ -39,7 +44,6 @@ public class FriendsManagementController {
     private Label requestsErrorLabel;
 
 
-    private ObservableList<String> activeFriends;
     private ObservableList<HBox> friends;
     private ObservableList<HBox> searchResults;
     private ObservableList<HBox> friendRequests;
@@ -48,7 +52,6 @@ public class FriendsManagementController {
 
     public void initialize() throws Exception {
         user = PeerMain.getUser();
-        activeFriends = PeerMain.getActiveFriends();
         friends = PeerMain.getFriends();
         searchResults = FXCollections.observableArrayList();
         friendRequests = FXCollections.observableArrayList();
@@ -106,8 +109,11 @@ public class FriendsManagementController {
                                 System.err.println("Error al enviar solicitud de amistad: " + exception.getMessage());
                             }
                         });
+                        Region spacer = new Region();
+                        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                        HBox box = new HBox(10, nameLabel, requestButton);
+                        HBox box = new HBox(10, nameLabel, spacer, requestButton);
+                        box.setAlignment(Pos.CENTER);
                         searchResults.add(box);
                     }
                 }
@@ -146,8 +152,11 @@ public class FriendsManagementController {
             Label nameLabel = new Label(friendName);
             nameLabel.setStyle("-fx-font-size: 16px;");
             nameLabel.setPrefWidth(90);
-            Label statusLabel = new Label("○");
-            statusLabel.setPrefWidth(45);
+            Circle status = new Circle();
+            status.setRadius(10);
+            status.setFill(Color.TRANSPARENT);
+            status.setStroke(Color.GRAY);
+            status.setStrokeWidth(2);
             Button removeButton = new Button("󰀒");
             removeButton.setOnAction(e -> {
                 try {
@@ -162,10 +171,12 @@ public class FriendsManagementController {
                     friendsErrorLabel.setVisible(true);
                 }
             });
-            HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            HBox friendBox = new HBox(10, nameLabel, spacer, status, removeButton);
+            friendBox.setAlignment(Pos.CENTER);
             friends.add(friendBox);
-
-
         }
     }
 
@@ -174,7 +185,7 @@ public class FriendsManagementController {
         for (String person: user.searchPendingRequests()) {
             Label nameLabel = new Label(person);
             nameLabel.setStyle("-fx-font-size: 16px;");
-            nameLabel.setPrefWidth(140);
+            nameLabel.setPrefWidth(90);
             Button acceptButton = new Button("");
             Button rejectButton = new Button("❌");
 
@@ -205,8 +216,11 @@ public class FriendsManagementController {
                     requestsErrorLabel.setVisible(true);
                 }
             });
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            HBox requestBox = new HBox(10, nameLabel, acceptButton, rejectButton);
+            HBox requestBox = new HBox(10, nameLabel, spacer, acceptButton, rejectButton);
+            requestBox.setAlignment(Pos.CENTER);
             friendRequests.add(requestBox);
         }
     }

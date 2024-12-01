@@ -57,6 +57,7 @@ public class LoginController {
 
         try {
             User user = new User(username, password);
+            PeerMain.initializeNotifier(user);
             user.signUp();
             PeerMain.setUser(user);
             PeerMain.setRoot("/gui/Chats.fxml");
