@@ -5,13 +5,13 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import m2m.peer.gui.NotifierGUI;
 
@@ -159,15 +159,9 @@ public class PeerMain extends Application {
         Label nameLabel = new Label(friendName);
         nameLabel.setStyle("-fx-font-size: 16px;");
         nameLabel.setPrefWidth(90); // Ancho mínimo
-        Image status = new Image("gui/images/GreenCircle.png");
-        //Image status = new Image(Objects.requireNonNull(PeerMain.class.getResource("gui/images/GreenCircle.png")).toExternalForm());
-        ImageView statusView = new ImageView(status);
-        statusView.setFitWidth(16);
-        statusView.setFitHeight(16);
-        statusView.setPreserveRatio(true);
-        /*Label statusLabel = new Label("🟢");
-        statusLabel.setStyle("-fx-font-size: 16px; -fx-font-family: 'Segoe UI Emoji';");
-        statusLabel.setPrefWidth(20);*/
+        Circle status = new Circle();
+        status.setRadius(11);
+        status.setFill(Color.GREEN);
         Button removeButton = new Button("󰀒");
         removeButton.setOnAction(e -> {
             try {
@@ -183,8 +177,8 @@ public class PeerMain extends Application {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox friendBox = new HBox(10, nameLabel, spacer, statusView, removeButton);
-        friendBox.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, null, null)));
+        HBox friendBox = new HBox(10, nameLabel, spacer, status, removeButton);
+        friendBox.setAlignment(Pos.CENTER);
         friends.addFirst(friendBox);
     }
 
