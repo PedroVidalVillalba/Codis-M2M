@@ -109,6 +109,12 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         verifyAuthentication(authentication, Method.FRIEND_REQUEST, user, friendName);
 
         database.friendRequest(user.getUsername(), friendName);
+
+        // Si está conectado, se avisa al usuario de que le ha llegado una nueva solicitud de amistad
+        Peer person = connectedUsers.get(friendName);
+        if (person != null) {
+            person.friendRequestReceived(user.getUsername(), authenticate(Peer.Method.FRIEND_REQUEST_RECEIVED, person, user.getUsername()));
+        }
     }
 
     @Override

@@ -13,6 +13,8 @@ public interface Notifier {
 
     void setNotifyAllFriendsConnected(Consumer<String> allFriends);
 
+    void setNotifyNewFriendRequest(Consumer<String> personName);
+
     void setRefreshFriends(Consumer<String> friendName);
 
     void setRefreshFriendRequests(Consumer<String> personName);
@@ -25,6 +27,8 @@ public interface Notifier {
     void notifyMessage(Message message, String friendName);
 
     void notifyAllFriendsConnected(String allFriends);
+
+    void notifyNewFriendRequest(String personName);
 
     void refreshFriends(String friendName);
 

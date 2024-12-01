@@ -4,7 +4,8 @@
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
+<BorderPane prefWidth="900"
+            xmlns="http://javafx.com/javafx/11.0.14-internal"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="m2m.peer.gui.FriendsManagementController"
             styleClass="pane">

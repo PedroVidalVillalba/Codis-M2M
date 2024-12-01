@@ -65,6 +65,13 @@ public class FriendsManagementController {
                 System.err.println(exception.getMessage());
             }
         }));
+        notifier.setRefreshFriendRequests(friendName -> Platform.runLater(() -> {
+            try {
+                initializePendingRequests();
+            } catch (Exception exception) {
+                System.err.println(exception.getMessage());
+            }
+        }));
 
 
 
@@ -163,6 +170,7 @@ public class FriendsManagementController {
     }
 
     private void initializePendingRequests() throws Exception {
+        friendRequests.clear();
         for (String person: user.searchPendingRequests()) {
             Label nameLabel = new Label(person);
             nameLabel.setStyle("-fx-font-size: 16px;");

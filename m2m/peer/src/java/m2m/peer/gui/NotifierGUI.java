@@ -11,6 +11,7 @@ public class NotifierGUI implements Notifier {
     private Consumer<String> notifyRemoveActiveFriend = friendName -> {} ;
     private BiConsumer<Message, String> notifyMessage = (message, friendName) -> {} ;
     private Consumer<String> allFriends = allFriends -> {} ;
+    private Consumer<String> personName = personName -> {} ;
     private Consumer<String> refreshFriends = friendName -> {} ;
     private Consumer<String> refreshFriendRequests = personName -> {} ;
 
@@ -32,6 +33,10 @@ public class NotifierGUI implements Notifier {
 
     public void setNotifyAllFriendsConnected(Consumer<String> allFriends) {
         this.allFriends = allFriends;
+    }
+
+    public void setNotifyNewFriendRequest(Consumer<String> personName) {
+        this.personName = personName;
     }
 
     public void setRefreshFriends(Consumer<String> friendName) {
@@ -61,6 +66,11 @@ public class NotifierGUI implements Notifier {
     @Override
     public void notifyAllFriendsConnected(String allFriends) {
         this.allFriends.accept(allFriends);
+    }
+
+    @Override
+    public void notifyNewFriendRequest(String personName) {
+        this.personName.accept(personName);
     }
 
     @Override

@@ -104,34 +104,23 @@ public class PeerMain extends Application {
             });
 
             notifier.refreshFriends(friendName);
-
-            /*Label nameLabel = new Label(friendName);
-            nameLabel.setStyle("-fx-font-size: 16px;");
-            nameLabel.setPrefWidth(90);
-            Label statusLabel = new Label("○");
-            statusLabel.setPrefWidth(45);
-            Button removeButton = new Button("Eliminar");
-            removeButton.setOnAction(e -> {
-                try {
-                    user.removeFriendship(friendName);
-                    friends.removeIf(hbox -> {
-                        Label label = (Label) hbox.getChildren().getFirst();
-                        return label.getText().equals(friendName);
-                    });
-                } catch (Exception exception) {
-                    System.err.println("Error al eliminar amigo: " + exception.getMessage());
-                }
-            });
-            HBox friendBox = new HBox(10, nameLabel, statusLabel, removeButton);
-            friends.add(friendBox);*/
         }));
 
         notifier.setNotifyAllFriendsConnected(allFriends -> Platform.runLater(() -> {
+            String pendingRequestsMessage ="";
+            try {
+                if (!user.searchPendingRequests().isEmpty()) {
+                    pendingRequestsMessage = "Hay nuevas solicitudes de amistad";
+                }
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+
             try {
                 if(allFriends.isEmpty()) {
-                    Runtime.getRuntime().exec(new String[] {"notify-send", "No hay amigos conectados"});
+                    Runtime.getRuntime().exec(new String[] {"notify-send", "No hay amigos conectados", pendingRequestsMessage});
                 } else {
-                    Runtime.getRuntime().exec(new String[] {"notify-send", "Amigos conectados: " + allFriends});
+                    Runtime.getRuntime().exec(new String[] {"notify-send", "Amigos conectados: " + allFriends, pendingRequestsMessage});
                     String[] friendNames = allFriends.split(", ");
                     System.out.println(Arrays.toString(friendNames));
                     for (String friendName : friendNames) {
@@ -144,6 +133,15 @@ public class PeerMain extends Application {
             }
 
 
+        }));
+
+        notifier.setNotifyNewFriendRequest(personName -> Platform.runLater(() -> {
+            try {
+                Runtime.getRuntime().exec(new String[] {"notify-send", "Nueva petición de amistad de " + personName});
+            } catch (IOException exception) {
+                System.err.println(exception.getMessage());
+            }
+            notifier.refreshFriendRequests(personName);
         }));
 
     }
@@ -160,7 +158,7 @@ public class PeerMain extends Application {
         nameLabel.setPrefWidth(90);
         Label statusLabel = new Label("🟢");
         statusLabel.setPrefWidth(45);
-        Button removeButton = new Button("Eliminar");
+        Button removeButton = new Button("󰀒");
         removeButton.setOnAction(e -> {
             try {
                 user.removeFriendship(friendName);
