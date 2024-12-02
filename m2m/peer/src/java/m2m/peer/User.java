@@ -31,7 +31,7 @@ public class User {
     public static final String KEYS_DIRECTORY = "/keys/";
 
     private final String username;
-    private final String password;
+    private String password;
     private final Security security;
     private final Map<String, Peer> activeFriends;    /* Pares (username, reference) */
     private final Map<String, List<Message>> chats;
@@ -42,6 +42,7 @@ public class User {
     private record AuthenticatedServer(Server server, PublicKey serverKey) {}
 
     public User(String username, String password) throws Exception {
+        Security.ensureNotNull(username, password);
         this.security = new Security();
         this.activeFriends = new HashMap<>();
         Map<String, SecretKey> authenticationKeys = new HashMap<>();
@@ -95,12 +96,14 @@ public class User {
 
     /* Métodos públicos que exportan la funcionalidad de la API */
     public void greet(String friendName) throws Exception {
+        Security.ensureNotNull(friendName);
         Peer friend = activeFriends.get(friendName);
         Ephemeral ephemeral = security.generateEphemeral(friend);
         friend.greet(reference, ephemeral.publicKey(), ephemeral.nonce());
     }
 
     public void sendMessage(String friendName, String message) throws Exception {
+        Security.ensureNotNull(friendName, message);
         Peer friend = activeFriends.get(friendName);
         List<Message> chat = chats.get(friendName);
         Message sent = new Message(message, MessageType.SENT);
@@ -124,23 +127,28 @@ public class User {
     }
 
     public void requestFriendship(String friend) throws Exception {
+        Security.ensureNotNull(friend);
         server.friendRequest(this.reference, friend, authenticate(Server.Method.FRIEND_REQUEST, friend));
     }
 
     public void acceptFriendship(String friend) throws Exception {
+        Security.ensureNotNull(friend);
         server.friendAccept(this.reference, friend, authenticate(Server.Method.FRIEND_ACCEPT, friend));
         notifier.refreshFriends(friend);
     }
 
     public void rejectFriendship(String friend) throws Exception {
+        Security.ensureNotNull(friend);
         server.friendReject(this.reference, friend, authenticate(Server.Method.FRIEND_REJECT, friend));
     }
 
     public void removeFriendship(String friend) throws Exception {
+        Security.ensureNotNull(friend);
         server.friendRemove(this.reference, friend, authenticate(Server.Method.FRIEND_REMOVE, friend));
     }
 
     public List<String> searchUsers(String pattern) throws Exception {
+        Security.ensureNotNull(pattern);
         return server.searchUsers(this.reference, pattern, authenticate(Server.Method.SEARCH_USERS, pattern));
     }
 
@@ -150,6 +158,20 @@ public class User {
 
     public List<String> searchPendingRequests() throws Exception {
         return server.searchPendingRequests(this.reference, authenticate(Server.Method.SEARCH_PENDING_REQUESTS));
+    }
+
+    public void changePassword(String newPassword) throws Exception {
+        Security.ensureNotNull(newPassword);
+        this.password = Security.digest(newPassword, username);
+        server.changePassword(this.reference, password, authenticate(Server.Method.CHANGE_PASSWORD, password));
+    }
+
+    public void deleteUser(String password) throws Exception {
+        Security.ensureNotNull(password);
+        if(!Security.digest(password, username).equals(this.password)) {
+            throw new GeneralSecurityException("Contraseña incorrecta");
+        }
+        server.deleteUser(this.reference, authenticate(Server.Method.DELETE_USER));
     }
 
     /* Métodos privados que facilitan la lógica del código */

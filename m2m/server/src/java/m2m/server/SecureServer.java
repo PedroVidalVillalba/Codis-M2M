@@ -183,6 +183,30 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         return database.getPendingRequests(peer.getUsername());
     }
 
+    @Override
+    public void changePassword(Peer peer, String newPassword, byte[] authentication) throws Exception {
+        Security.ensureNotNull(peer, newPassword, authentication);
+        verifyAuthentication(authentication, Method.CHANGE_PASSWORD, peer, newPassword);
+
+        String username = peer.getUsername();
+        byte[] rawPassword = Base64.getDecoder().decode(security.decrypt(newPassword, peer));
+        database.registerUser(username, rawPassword);
+
+        database.changePassword(peer.getUsername(), rawPassword);
+    }
+
+    @Override
+    public void deleteUser(Peer peer, byte[] authentication) throws Exception {
+        Security.ensureNotNull(peer, authentication);
+        verifyAuthentication(authentication, Method.DELETE_USER, peer);
+
+        // Notifica a los amigos que el usuario se ha desconectado
+        notifyFriendDisconnection(peer.getUsername());
+        connectedUsers.remove(peer.getUsername());
+
+        database.deleteUser(peer.getUsername());
+    }
+
     private void verifyAuthentication(byte[] authentication, Server.Method method, Peer client, Object... parameters) throws Exception {
         if (method.requiresLogin() && !connectedUsers.containsValue(client)) {
             throw new GeneralSecurityException("Se requiere autenticación del usuario " + client.getUsername() + " para ejecutar el método " + method);
