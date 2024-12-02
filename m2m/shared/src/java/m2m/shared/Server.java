@@ -7,7 +7,7 @@ import java.util.List;
 public interface Server extends Remote {
     /* Enumeración con los métodos proporcionados por el servidor, con fines de autenticación */
     enum Method {
-        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS, SEARCH_FRIENDS, SEARCH_PENDING_REQUESTS;
+        SIGN_UP, LOGIN, LOGOUT, FRIEND_REQUEST, FRIEND_ACCEPT, FRIEND_REJECT, FRIEND_REMOVE, SEARCH_USERS, SEARCH_FRIENDS, SEARCH_PENDING_REQUESTS, CHANGE_PASSWORD, DELETE_USER;
 
         private boolean requiresLogin;
         static {
@@ -21,6 +21,8 @@ public interface Server extends Remote {
             SEARCH_USERS.requiresLogin = false;
             SEARCH_FRIENDS.requiresLogin = true;
             SEARCH_PENDING_REQUESTS.requiresLogin = true;
+            CHANGE_PASSWORD.requiresLogin = true;
+            DELETE_USER.requiresLogin = true;
         }
         
         public boolean requiresLogin() {
@@ -130,4 +132,21 @@ public interface Server extends Remote {
      */
     List<String> searchPendingRequests(Peer peer, byte[] authentication) throws Exception;
 
-    }
+    /**
+     * Modifica la contraseña del usuario. Método a ser llamado por un peer.
+     * @param peer Peer que quiere modificar su contraseña.
+     * @param newPassword Nueva contraseña cifrada.
+     * @param authentication Código de autenticación del usuario.
+     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     */
+    void changePassword(Peer peer, String newPassword, byte[] authentication) throws Exception;
+
+    /**
+     * Permite que un usuario borre su propia cuenta. Método a ser llamado por un peer.
+     * @param peer Peer que quiere eliminar.
+     * @param authentication Código de autenticación del usuario.
+     * @throws Exception cuando ocurre algún error en la comunicación remota o con la seguridad.
+     */
+    void deleteUser(Peer peer, byte[] authentication) throws Exception;
+
+}

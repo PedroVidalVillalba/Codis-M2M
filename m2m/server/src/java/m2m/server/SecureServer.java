@@ -72,8 +72,6 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         database.registerUser(username, rawPassword);
 
         connectedUsers.put(username, peer);
-        // Un usuario recién registrado no debería tener amigos
-        //notifyFriendConnection(username);
     }
 
     @Override
@@ -86,9 +84,7 @@ public class SecureServer extends UnicastRemoteObject implements Server {
             throw new Exception("El usuario ya ha iniciado sesión desde otro lugar");
         }
         byte[] rawPassword = Base64.getDecoder().decode(security.decrypt(password, peer));
-        // System.out.print("Probando login " + username);
         database.loginUser(username, rawPassword);
-        // System.out.println(" Login ok");
 
         connectedUsers.put(username, peer);
         notifyFriendConnection(username);
@@ -99,8 +95,9 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         Security.ensureNotNull(peer, authentication);
         verifyAuthentication(authentication, Method.LOGOUT, peer);
 
-        notifyFriendDisconnection(peer.getUsername());
-        connectedUsers.remove(peer.getUsername());
+        String username = peer.getUsername();
+        notifyFriendDisconnection(username);
+        connectedUsers.remove(username);
     }
 
     @Override
@@ -108,12 +105,13 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         Security.ensureNotNull(user, friendName, authentication);
         verifyAuthentication(authentication, Method.FRIEND_REQUEST, user, friendName);
 
-        database.friendRequest(user.getUsername(), friendName);
+        String username = user.getUsername();
+        database.friendRequest(username, friendName);
 
         // Si está conectado, se avisa al usuario de que le ha llegado una nueva solicitud de amistad
         Peer person = connectedUsers.get(friendName);
         if (person != null) {
-            person.friendRequestReceived(user.getUsername(), authenticate(Peer.Method.FRIEND_REQUEST_RECEIVED, person, user.getUsername()));
+            person.friendRequestReceived(username, authenticate(Peer.Method.FRIEND_REQUEST_RECEIVED, person, username));
         }
     }
 
@@ -181,6 +179,28 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         verifyAuthentication(authentication, Method.SEARCH_PENDING_REQUESTS, peer);
 
         return database.getPendingRequests(peer.getUsername());
+    }
+
+    @Override
+    public void changePassword(Peer peer, String newPassword, byte[] authentication) throws Exception {
+        Security.ensureNotNull(peer, newPassword, authentication);
+        verifyAuthentication(authentication, Method.CHANGE_PASSWORD, peer, newPassword);
+
+        byte[] rawPassword = Base64.getDecoder().decode(security.decrypt(newPassword, peer));
+        database.changePassword(peer.getUsername(), rawPassword);
+    }
+
+    @Override
+    public void deleteUser(Peer peer, byte[] authentication) throws Exception {
+        Security.ensureNotNull(peer, authentication);
+        verifyAuthentication(authentication, Method.DELETE_USER, peer);
+
+        // Notifica a los amigos que el usuario se ha desconectado
+        String username = peer.getUsername();
+        notifyFriendDisconnection(username);
+        connectedUsers.remove(username);
+
+        database.deleteUser(username);
     }
 
     private void verifyAuthentication(byte[] authentication, Server.Method method, Peer client, Object... parameters) throws Exception {

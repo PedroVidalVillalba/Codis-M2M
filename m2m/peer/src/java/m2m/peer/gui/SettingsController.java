@@ -59,7 +59,15 @@ public class SettingsController {
             return;
         }
 
-//        user.changePassword(newPassword);
+        try {
+            user.changePassword(newPassword);
+        } catch (Exception exception) {
+            changePasswordLabel.setText(exception.getMessage());
+            if (!changePasswordLabel.getStyleClass().contains("error-label")) {
+                changePasswordLabel.getStyleClass().add("error-label");
+            }
+            return;
+        }
 
         changePasswordLabel.setText("Contraseña cambiada con éxito");
         changePasswordLabel.getStyleClass().remove("error-label");
@@ -71,13 +79,11 @@ public class SettingsController {
         confirmPasswordField.clear();
 
         try {
-            /* */
-//            user.deleteUser(password);
+            user.deleteUser(password);
+            PeerMain.setUser(null);
+            PeerMain.setRoot("/gui/Login.fxml");
         } catch (Exception exception) {
             deleteUserErrorLabel.setText(exception.getMessage());
         }
-
-        PeerMain.setUser(null);
-        PeerMain.setRoot("/gui/Login.fxml");
     }
 }

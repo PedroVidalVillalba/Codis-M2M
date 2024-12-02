@@ -254,6 +254,32 @@ public class DataBase {
         return pendingPeople;
     }
 
+    public void changePassword(String username, byte[] password) throws Exception {
+        @Language("SQL")
+        String query = "UPDATE users SET password = ?, salt = ? WHERE username = ?";
+
+        byte[] salt = Security.generateNonce();
+        byte[] hashedPassword = Security.digest(password, salt);
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setBytes(1, hashedPassword);
+            preparedStatement.setBytes(2, salt);
+            preparedStatement.setString(3, username);
+            preparedStatement.executeUpdate();
+        }
+
+    }
+
+    public void deleteUser(String username) throws SQLException {
+        @Language("SQL")
+        String query = "DELETE FROM users WHERE username = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.executeUpdate();
+        }
+    }
+
     private int executeUpdate(String query, String... missingFields) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             for (int i = 0; i < missingFields.length; i++) {

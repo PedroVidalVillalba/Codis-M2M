@@ -38,8 +38,8 @@ BEGIN
         SELECT 1 FROM information_schema.tables WHERE table_name = 'friends'
     ) THEN
         CREATE TABLE Friends (
-            sender VARCHAR REFERENCES Users(username),
-            receiver VARCHAR REFERENCES Users(username),
+            sender VARCHAR REFERENCES Users(username) ON DELETE CASCADE,
+            receiver VARCHAR REFERENCES Users(username) ON DELETE CASCADE,
             state VARCHAR(10),
             PRIMARY KEY (sender, receiver)
         );
