@@ -4,16 +4,16 @@
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
 
-<BorderPane prefWidth="900"
-            xmlns="http://javafx.com/javafx/11.0.14-internal"
+<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="m2m.peer.gui.FriendsManagementController"
             styleClass="pane">
     <!-- Barra superior con botones -->
     <top>
         <ToolBar>
-            <Button fx:id="chatsButton" onAction="#handleChats" text="🗪" />
-            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰍃" />
+            <Button onAction="#handleChats" text="🗪" />
+            <Button onAction="#handleSettings" text=""/>
+            <Button onAction="#handleLogout" text="󰍃" />
         </ToolBar>
     </top>
 
@@ -34,7 +34,7 @@
                     <TextField visible="false" />
                 </HBox>
                 <ListView fx:id="friendsListView" VBox.vgrow="ALWAYS" />
-                <Label fx:id="friendsErrorLabel" />
+                <Label fx:id="friendsErrorLabel" styleClass="error-label"/>
             </VBox>
 
             <!-- Columna 2: Búsqueda de personas -->
@@ -45,7 +45,7 @@
                     <Button text="󰀖" onAction="#searchForPeople" />
                 </HBox>
                 <ListView fx:id="searchResultsListView" VBox.vgrow="ALWAYS" />
-                <Label fx:id="searchErrorLabel" />
+                <Label fx:id="searchErrorLabel" styleClass="error-label"/>
             </VBox>
 
             <!-- Columna 3: Solicitudes de amistad pendientes -->
@@ -55,7 +55,7 @@
                     <TextField visible="false" />
                 </HBox>
                 <ListView fx:id="friendRequestsListView" VBox.vgrow="ALWAYS" />
-                <Label fx:id="requestsErrorLabel" />
+                <Label fx:id="requestsErrorLabel" styleClass="error-label"/>
             </VBox>
         </GridPane>
     </center>

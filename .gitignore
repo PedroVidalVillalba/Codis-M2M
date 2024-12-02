@@ -4,6 +4,7 @@
 
 # ZIP files
 *.zip
+*.tgz
 
 # Ignore Gradle project-specific cache directory
 .gradle

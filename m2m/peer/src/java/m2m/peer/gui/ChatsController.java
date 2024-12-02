@@ -2,13 +2,11 @@ package m2m.peer.gui;
 
 import javafx.application.Platform;
 import javafx.collections.*;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.skin.ListViewSkin;
 import javafx.scene.layout.HBox;
-import javafx.util.Callback;
 import m2m.peer.*;
 
 import java.io.IOException;
@@ -20,10 +18,6 @@ public class ChatsController {
     @FXML
     private TextField messageField;
     @FXML
-    private Button friendsButton;
-    @FXML
-    private Button logoutButton;
-    @FXML
     private ListView<String> friendsListView;
 
     private ObservableList<Message> currentChat;
@@ -34,7 +28,7 @@ public class ChatsController {
 
 
     @FXML
-    private void initialize() throws Exception {
+    private void initialize() {
         user = PeerMain.getUser();
         notifier = user.getNotifier();
 
@@ -177,5 +171,10 @@ public class ChatsController {
         user.logout();
         PeerMain.setUser(null);
         PeerMain.setRoot("/gui/Login.fxml");  // Volver al login
+    }
+
+    @FXML
+    private void handleSettings() {
+        PeerMain.setRoot("/gui/Settings.fxml");
     }
 }

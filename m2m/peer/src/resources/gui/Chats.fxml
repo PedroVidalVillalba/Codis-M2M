@@ -11,9 +11,10 @@
 
     <!-- Barra superior con botones -->
     <top>
-        <ToolBar styleClass="tool-bar">
-            <Button fx:id="friendsButton" onAction="#handleFriends" text="󰣐" />
-            <Button fx:id="logoutButton" onAction="#handleLogout" text="󰍃" />
+        <ToolBar>
+            <Button onAction="#handleFriends" text="󰣐" />
+            <Button onAction="#handleSettings" text=""/>
+            <Button onAction="#handleLogout" text="󰍃"/>
         </ToolBar>
     </top>
 

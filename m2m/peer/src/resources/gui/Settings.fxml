@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import java.net.URL?>
+<BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="m2m.peer.gui.SettingsController"
+            styleClass="pane">
+    <!-- Barra superior con botones -->
+    <top>
+        <ToolBar>
+            <Button onAction="#handleChats" text="🗪" />
+            <Button onAction="#handleFriends" text="󰣐" />
+            <Button onAction="#handleLogout" text="󰍃" />
+        </ToolBar>
+    </top>
+
+    <center>
+        <GridPane hgap="20" vgap="10" alignment="CENTER">
+            <!-- Configuración de las columnas con proporciones -->
+            <columnConstraints>
+                <ColumnConstraints percentWidth="45" halignment="CENTER"/>
+                <ColumnConstraints percentWidth="45" halignment="CENTER"/>
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints percentHeight="30" valignment="CENTER"/>
+                <RowConstraints percentHeight="70" valignment="TOP"/>
+            </rowConstraints>
+
+            <!-- Fila de arriba: Información de la sesión -->
+            <VBox spacing="10" alignment="CENTER" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0">
+                <Label styleClass="title-label" text="Información de sesión" />
+                <HBox spacing="5" alignment="CENTER">
+                    <Label text="Nombre de usuario:"/>
+                    <Label fx:id="userLabel"/>
+                </HBox>
+            </VBox>
+
+            <!-- Columna 1: Cambiar contraseña -->
+            <GridPane hgap="10" vgap="10" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                <columnConstraints>
+                    <ColumnConstraints halignment="CENTER" percentWidth="50"/>
+                    <ColumnConstraints halignment="CENTER" percentWidth="50"/>
+                </columnConstraints>
+
+                <Label styleClass="title-label" text="Cambiar contraseña" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+                <Label text="Nueva contraseña:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <PasswordField fx:id="newPasswordField" promptText="Insertar nueva contraseña..." GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Confirmar nueva contraseña:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <PasswordField fx:id="confirmPasswordField" promptText="Volver a insertar la nueva nueva contraseña..." GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                <Button text="Cambiar contraseña" onAction="#changePassword" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+                <Label fx:id="changePasswordLabel" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+            </GridPane>
+
+            <!-- Columna 2: Borrar usuario -->
+            <VBox spacing="10" alignment="TOP_CENTER" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <Label styleClass="title-label" text="Borrar usuario"/>
+                <HBox spacing="5" alignment="CENTER" >
+                    <Label text="Contraseña:"/>
+                    <PasswordField fx:id="confirmDeleteUserPassword" promptText="Insertar contraseña para confirmar..."/>
+                </HBox>
+                <Button text="Borrar usuario" onAction="#deleteUser"/>
+                <Label fx:id="deleteUserErrorLabel" styleClass="error-label"/>
+            </VBox>
+        </GridPane>
+    </center>
+
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+        <URL value="@/gui/styles/text-field.css"/>
+        <URL value="@/gui/styles/button.css"/>
+    </stylesheets>
+</BorderPane>

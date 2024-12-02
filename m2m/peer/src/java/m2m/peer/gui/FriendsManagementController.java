@@ -24,10 +24,6 @@ import java.util.Objects;
 
 public class FriendsManagementController {
     @FXML
-    public Button chatsButton;
-    @FXML
-    public Button logoutButton;
-    @FXML
     private ListView<HBox> friendsListView; // Cada amigo es un HBox para nombre y botones
     @FXML
     private TextField searchField;
@@ -133,14 +129,21 @@ public class FriendsManagementController {
 
     }
 
-    public void handleLogout() throws Exception {
+    @FXML
+    private void handleLogout() throws Exception {
         user.logout();
         PeerMain.setUser(null);
         PeerMain.setRoot("/gui/Login.fxml");  // Volver al login
     }
 
-    public void handleChats() {
+    @FXML
+    private void handleChats() {
         PeerMain.setRoot("/gui/Chats.fxml");  // Cambiar a la pestaña de chats
+    }
+
+    @FXML
+    private void handleSettings() {
+        PeerMain.setRoot("/gui/Settings.fxml"); // Cambiar a la pestaña de ajustes
     }
 
     private void initializeFriends() throws Exception {
