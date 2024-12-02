@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<?import java.net.URL?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="10"
+      alignment="CENTER">
+
+    <!-- Nombre del amigo -->
+    <Label fx:id="friendName"/>
+
+    <!-- Espacio en blanco -->
+    <Region HBox.hgrow="ALWAYS"/>
+
+    <!-- Círculo indicando el estatus del amigo (desconectado/en línea) -->
+    <Circle fx:id="status" radius="10"/>
+
+    <!-- Botón de eliminar -->
+    <Button fx:id="removeFriendButton" text="󰀒"/>
+
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+        <URL value="@/gui/styles/friends.css"/>
+    </stylesheets>
+</HBox>

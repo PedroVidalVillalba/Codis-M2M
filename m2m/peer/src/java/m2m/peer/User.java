@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/* TODO: añadir comprobaciones de todo */
 /**
  * Clase con las funcionalidades principales que exporta la API para los usuarios.
  * Abstrae las llamadas a los procedimientos remotos en llamadas mucho más comprensibles
@@ -77,6 +76,10 @@ public class User {
 
     public Peer getReference() {
         return reference;
+    }
+
+    public Map<String, Peer> getActiveFriends() {
+        return activeFriends;
     }
 
     public List<Message> getChat(String friend) {
@@ -224,6 +227,7 @@ public class User {
     }
 
     private byte[] authenticate(Server.Method method, Object... parameters) throws Exception {
+        Security.ensureNotNull(method, parameters);
         byte[] nonce = Security.generateNonce();
         byte[] serializedData = Security.serialize(method, parameters);
         byte[] hashedAuthentication = Security.digest(serializedData, nonce);

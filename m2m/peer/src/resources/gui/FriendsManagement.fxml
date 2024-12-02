@@ -29,17 +29,14 @@
 
             <!-- Columna 1: Lista de amigos -->
             <VBox spacing="10" alignment="CENTER" GridPane.columnIndex="0" VBox.vgrow="ALWAYS">
-                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Lista de amigos" />
-                <HBox spacing="5" alignment="CENTER">
-                    <TextField visible="false" />
-                </HBox>
+                <Label styleClass="title-label" text="Lista de amigos" />
                 <ListView fx:id="friendsListView" VBox.vgrow="ALWAYS" />
                 <Label fx:id="friendsErrorLabel" styleClass="error-label"/>
             </VBox>
 
             <!-- Columna 2: Búsqueda de personas -->
             <VBox spacing="10" alignment="CENTER" GridPane.columnIndex="1" VBox.vgrow="ALWAYS">
-                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Buscar personas" />
+                <Label styleClass="title-label" text="Buscar personas" />
                 <HBox spacing="5" alignment="CENTER">
                     <TextField fx:id="searchField" promptText="Nombre de usuario" />
                     <Button text="󰀖" onAction="#searchForPeople" />
@@ -50,10 +47,7 @@
 
             <!-- Columna 3: Solicitudes de amistad pendientes -->
             <VBox spacing="10" alignment="CENTER" GridPane.columnIndex="2" VBox.vgrow="ALWAYS">
-                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Solicitudes de amistad" />
-                <HBox spacing="5" alignment="CENTER">
-                    <TextField visible="false" />
-                </HBox>
+                <Label styleClass="title-label" text="Solicitudes de amistad" />
                 <ListView fx:id="friendRequestsListView" VBox.vgrow="ALWAYS" />
                 <Label fx:id="requestsErrorLabel" styleClass="error-label"/>
             </VBox>

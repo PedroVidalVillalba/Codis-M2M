@@ -1,6 +1,5 @@
 package m2m.peer.gui;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import m2m.peer.PeerMain;

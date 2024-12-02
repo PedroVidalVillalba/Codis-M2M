@@ -2,7 +2,6 @@ package m2m.peer.gui;
 
 import javafx.application.Platform;
 import javafx.collections.*;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -12,6 +11,7 @@ import m2m.peer.*;
 import java.io.IOException;
 import java.util.HashSet;
 
+/* TODO: arreglar notificaciones de conexión y desconexión de amigos */
 public class ChatsController {
     @FXML
     private ListView<Message> currentChatView;
@@ -21,9 +21,10 @@ public class ChatsController {
     private ListView<String> friendsListView;
 
     private ObservableList<Message> currentChat;
+    private ObservableSet<String> messagePending;
+    private ObservableList<String> activeFriends;
     private String currentFriendChat;
     private User user;
-    private ObservableSet<String> messagePending;
     private Notifier notifier;
 
 
@@ -32,7 +33,9 @@ public class ChatsController {
         user = PeerMain.getUser();
         notifier = user.getNotifier();
 
-        friendsListView.setItems(PeerMain.getActiveFriends());
+        activeFriends = FXCollections.observableArrayList(user.getActiveFriends().keySet());
+        friendsListView.setItems(activeFriends);
+
         currentFriendChat = null;
         /* Añadir una lista de los amigos con mensajes pendientes y un listener para actualizar la vista */
         messagePending = FXCollections.observableSet(new HashSet<>());
@@ -103,7 +106,7 @@ public class ChatsController {
                 messagePending.add(friend);
             }
 
-            if (!friendsListView.getScene().getWindow().isShowing()) {
+            if (!PeerMain.windowFocused()) {
                 try {
                     Runtime.getRuntime().exec(new String[] {"notify-send", friend + ": " + message.message()});
                 } catch (IOException exception) {

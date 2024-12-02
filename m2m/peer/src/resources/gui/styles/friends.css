@@ -1,0 +1,12 @@
+@import url("/gui/styles/colors.css");
+
+.empty-circle {
+    -fx-fill: transparent;
+    -fx-stroke: -fx--overlay-0;
+    -fx-stroke-width: 2;
+}
+.filled-circle {
+    -fx-fill: -fx--green;
+    -fx-stroke: -fx--green;
+    -fx-stroke-width: 2;
+}

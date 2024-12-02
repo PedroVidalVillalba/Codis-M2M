@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="10"
+      alignment="CENTER">
+
+    <!-- Nombre del solicitante -->
+    <Label fx:id="requesterName"/>
+
+    <!-- Espacio en blanco -->
+    <Region HBox.hgrow="ALWAYS"/>
+
+    <!-- Botón de aceptar -->
+    <Button fx:id="acceptButton" text=""/>
+
+    <!-- Botón de rechazar -->
+    <Button fx:id="rejectButton" text="❌"/>
+
+    <stylesheets>
+        <URL value="@/gui/styles/basic.css"/>
+    </stylesheets>
+</HBox>
