@@ -17,6 +17,7 @@
 }
 
 .tool-bar {
+    -fx-alignment: center-right;
     -fx-background-color: -fx--surface-0;
 }
 
@@ -27,6 +28,13 @@
 
 .title-label {
     -fx-font-size: 25;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-text-fill: -fx--text;
+}
+
+.subtitle-label {
+    -fx-font-size: 18;
     -fx-font-weight: bold;
     -fx-text-alignment: center;
     -fx-text-fill: -fx--text;

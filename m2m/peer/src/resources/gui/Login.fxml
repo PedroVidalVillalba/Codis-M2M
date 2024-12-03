@@ -7,18 +7,21 @@
 <AnchorPane xmlns="http://javafx.com/javafx/11.0.14-internal"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="m2m.peer.gui.LoginController"
-            styleClass="pane" >
-    <VBox alignment="CENTER" layoutX="-104.0" layoutY="-108.0" prefHeight="508.0" prefWidth="704.0" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="-108.0">
+            styleClass="pane"
+            minWidth="800" minHeight="450">
+
+    <VBox alignment="CENTER" layoutX="-104.0" layoutY="-108.0" minWidth="800" minHeight="450"
+          spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
         <!-- Campos de Usuario y Contraseña -->
         <GridPane alignment="CENTER" hgap="10" vgap="10">
             <!-- Usuario -->
             <Label alignment="CENTER_RIGHT" text="Usuario:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-            <TextField fx:id="usernameField" prefHeight="24.0" prefWidth="200.0" promptText="Ingresa tu usuario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <TextField fx:id="usernameField" prefHeight="24.0" minWidth="200.0" promptText="Ingresa tu usuario" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
             <!-- Contraseña -->
             <Label alignment="CENTER_RIGHT" text="Contraseña:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-            <PasswordField fx:id="passwordField" prefHeight="24.0" prefWidth="200.0" promptText="Ingresa tu contraseña" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <PasswordField fx:id="passwordField" prefHeight="24.0" minWidth="200.0" promptText="Ingresa tu contraseña" GridPane.columnIndex="1" GridPane.rowIndex="1" />
         </GridPane>
 
         <!-- Botones -->

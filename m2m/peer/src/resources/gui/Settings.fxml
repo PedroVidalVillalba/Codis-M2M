@@ -7,10 +7,12 @@
 <BorderPane xmlns="http://javafx.com/javafx/11.0.14-internal"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="m2m.peer.gui.SettingsController"
+            minWidth="1100" minHeight="600"
             styleClass="pane">
     <!-- Barra superior con botones -->
     <top>
-        <ToolBar>
+        <Pane HBox.hgrow="ALWAYS" />
+        <ToolBar styleClass="tool-bar">
             <Button onAction="#handleChats" text="🗪" />
             <Button onAction="#handleFriends" text="󰣐" />
             <Button onAction="#handleLogout" text="󰍃" />
@@ -48,9 +50,9 @@
 
                 <Label styleClass="title-label" text="Cambiar contraseña" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
                 <Label text="Nueva contraseña:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <PasswordField fx:id="newPasswordField" promptText="Insertar nueva contraseña..." GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <PasswordField fx:id="newPasswordField" promptText="Insertar nueva contraseña" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                 <Label text="Confirmar nueva contraseña:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <PasswordField fx:id="confirmPasswordField" promptText="Volver a insertar la nueva nueva contraseña..." GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                <PasswordField fx:id="confirmPasswordField" promptText="Repetir nueva contraseña" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1" />
                 <Button text="Cambiar contraseña" onAction="#changePassword" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
                 <Label fx:id="changePasswordLabel" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
             </GridPane>
@@ -58,9 +60,9 @@
             <!-- Columna 2: Borrar usuario -->
             <VBox spacing="10" alignment="TOP_CENTER" GridPane.rowIndex="1" GridPane.columnIndex="1">
                 <Label styleClass="title-label" text="Borrar usuario"/>
-                <HBox spacing="5" alignment="CENTER" >
+                <HBox spacing="5" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="Contraseña:"/>
-                    <PasswordField fx:id="confirmDeleteUserPassword" promptText="Insertar contraseña para confirmar..."/>
+                    <PasswordField fx:id="confirmDeleteUserPassword" promptText="Insertar contraseña para confirmar" HBox.hgrow="ALWAYS"/>
                 </HBox>
                 <Button text="Borrar usuario" onAction="#deleteUser"/>
                 <Label fx:id="deleteUserErrorLabel" styleClass="error-label"/>
