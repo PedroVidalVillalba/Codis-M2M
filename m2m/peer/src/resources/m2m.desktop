@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=M2M
+Comment=M2M Peer
+Exec=java -jar /home/pedro/OneDrive/Cuarto/Primer_Cuatri/Distribuida/Practicas/P5/peer.jar
+Terminal=false
+Type=Application
+Categories=Development;Chat
+StartupNotify=true

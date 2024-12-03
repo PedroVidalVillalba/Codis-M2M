@@ -26,9 +26,6 @@ public class SecureServer extends UnicastRemoteObject implements Server {
         String privateKeyPath = "/keys/server_private_key_" + InetAddress.getLocalHost().getHostName() + ".pem";
         this.privateKey = Security.loadPrivateKey(privateKeyPath);
         this.security.setSelfReference(this);
-//        /* Exportar este objeto en un puerto anónimo, con las correspondientes fábricas de sockets seguros */
-//        UnicastRemoteObject.unexportObject(this, true); /* El constructor por defecto ya exporta el objeto; quitarlo y añadir las fábricas de sockets */
-//        UnicastRemoteObject.exportObject(this, 0, new SecureClientSocketFactory(this), new SecureServerSocketFactory(security));
     }
 
 
@@ -244,9 +241,7 @@ public class SecureServer extends UnicastRemoteObject implements Server {
             SecretKey encryptedKeyForFriend = security.encrypt(authenticationKey, friend);
             SecretKey encryptedKeyForUser = security.encrypt(authenticationKey, user);
 
-            // System.out.println("Probando addActiveFriend: " +  friendName);
             friend.addActiveFriend(user, encryptedKeyForFriend, authenticate(Peer.Method.ADD_ACTIVE_FRIEND, friend, user, encryptedKeyForFriend));
-            // System.out.println("addActiveFriend ok");
             activeFriends.put(friendName, friend);
             encryptedAuthenticationKeys.put(friendName, encryptedKeyForUser);
         }

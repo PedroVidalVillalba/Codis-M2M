@@ -137,7 +137,7 @@ public class User {
     public void acceptFriendship(String friend) throws Exception {
         Security.ensureNotNull(friend);
         server.friendAccept(this.reference, friend, authenticate(Server.Method.FRIEND_ACCEPT, friend));
-        notifier.refreshFriends(friend);
+        notifier.refreshFriends();
     }
 
     public void rejectFriendship(String friend) throws Exception {

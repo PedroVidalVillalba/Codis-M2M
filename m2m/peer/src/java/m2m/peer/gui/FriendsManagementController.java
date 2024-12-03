@@ -1,6 +1,5 @@
 package m2m.peer.gui;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -8,7 +7,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
-import m2m.peer.Notifier;
 import m2m.peer.PeerMain;
 import m2m.peer.User;
 
@@ -192,22 +190,9 @@ public class FriendsManagementController {
         });
 
         // Actualizar el comportamiento del notifier para actualizar las listas de amigos y solicitudes pendientes cuando sea necesario
-        Notifier notifier = user.getNotifier();
-        notifier.setRefreshFriends(friendName -> Platform.runLater(() -> {
-            try {
-                friends.setAll(user.searchFriends());
-            } catch (Exception exception) {
-                System.err.println(exception.getMessage());
-            }
-        }));
-        notifier.setRefreshFriendRequests(friendName -> Platform.runLater(() -> {
-            try {
-                friendRequests.setAll(user.searchPendingRequests());
-            } catch (Exception exception) {
-                System.err.println(exception.getMessage());
-            }
-        }));
-
+        GraphicalNotifier notifier = (GraphicalNotifier) user.getNotifier();
+        notifier.setFriends(friends);
+        notifier.setFriendRequests(friendRequests);
     }
 
     public void searchForPeople() {

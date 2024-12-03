@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=M2M Server
+Comment=M2M Server
+Exec=systemctl --user restart m2m-server.service
+Terminal=false
+Type=Application
+Categories=Development;Chat
+StartupNotify=true

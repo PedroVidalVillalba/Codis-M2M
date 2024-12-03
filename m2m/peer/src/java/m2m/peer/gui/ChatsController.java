@@ -11,7 +11,6 @@ import m2m.peer.*;
 import java.io.IOException;
 import java.util.HashSet;
 
-/* TODO: arreglar notificaciones de conexión y desconexión de amigos */
 public class ChatsController {
     @FXML
     private ListView<Message> currentChatView;
@@ -20,25 +19,27 @@ public class ChatsController {
     @FXML
     private ListView<String> friendsListView;
 
-    private ObservableList<Message> currentChat;
-    private ObservableSet<String> messagePending;
-    private ObservableList<String> activeFriends;
+    private static ObservableSet<String> messagePending;
     private String currentFriendChat;
     private User user;
-    private Notifier notifier;
+    private GraphicalNotifier notifier;
 
 
     @FXML
     private void initialize() {
         user = PeerMain.getUser();
-        notifier = user.getNotifier();
+        notifier = (GraphicalNotifier) user.getNotifier();
 
-        activeFriends = FXCollections.observableArrayList(user.getActiveFriends().keySet());
+        ObservableList<String> activeFriends = FXCollections.observableArrayList(user.getActiveFriends().keySet());
         friendsListView.setItems(activeFriends);
+        notifier.setActiveFriends(activeFriends);
 
         currentFriendChat = null;
         /* Añadir una lista de los amigos con mensajes pendientes y un listener para actualizar la vista */
-        messagePending = FXCollections.observableSet(new HashSet<>());
+        if (messagePending == null) {
+            messagePending = FXCollections.observableSet(new HashSet<>());
+            notifier.setMessagePending(messagePending);
+        }
         messagePending.addListener((SetChangeListener<String>) change -> {
             if (change.wasAdded() || change.wasRemoved()) {
                 Platform.runLater(() -> friendsListView.refresh());
@@ -99,21 +100,6 @@ public class ChatsController {
                 }
             }
         });
-
-        /* Notificación por defecto si aún no entró a ningún chat */
-        notifier.setNotifyMessage((message, friend) -> Platform.runLater(() -> {
-            if (friendsListView.getItems().contains(friend)) {
-                messagePending.add(friend);
-            }
-
-            if (!PeerMain.windowFocused()) {
-                try {
-                    Runtime.getRuntime().exec(new String[] {"notify-send", friend + ": " + message.message()});
-                } catch (IOException exception) {
-                    System.err.println(exception.getMessage());
-                }
-            }
-        }));
     }
 
     @FXML
@@ -121,8 +107,6 @@ public class ChatsController {
         String friendName = friendsListView.getSelectionModel().getSelectedItem();
         if (friendName == null) return;
 
-        /* TODO: aquí se hace un handshake nuevo cada vez que se abre un chat, incluso que el otro ya estuviera saludado
-             No es necesariamente malo, porque hace que se cambie todavía más a menudo de claves, pero habría que pensar si hace falta */
         try {
             user.greet(friendName);
         } catch (Exception exception) {
@@ -130,25 +114,11 @@ public class ChatsController {
         }
 
         currentFriendChat = friendName;
-        currentChat = FXCollections.observableArrayList(user.getChat(currentFriendChat));
+        ObservableList<Message> currentChat = FXCollections.observableArrayList(user.getChat(currentFriendChat));
         currentChatView.setItems(currentChat);
         messagePending.remove(currentFriendChat);
 
-        notifier.setNotifyMessage((message, friend) -> Platform.runLater(() -> {
-            if (currentFriendChat != null && currentFriendChat.equals(friend)) {
-                currentChat.add(message);
-            } else if (friendsListView.getItems().contains(friend)) {
-                messagePending.add(friend);
-            }
-
-            if (!friendsListView.getScene().getWindow().isShowing()) {
-                try {
-                    Runtime.getRuntime().exec(new String[] {"notify-send", friend + ": " + message.message()});
-                } catch (IOException exception) {
-                    System.err.println(exception.getMessage());
-                }
-            }
-        }));
+        notifier.setCurrentChat(currentFriendChat, currentChat);
     }
 
     @FXML
@@ -166,6 +136,7 @@ public class ChatsController {
 
     @FXML
     private void handleFriends() {
+        notifier.setCurrentChat(null, null);
         PeerMain.setRoot("/gui/FriendsManagement.fxml");  // Cambiar a la pestaña de amigos
     }
 
@@ -173,11 +144,15 @@ public class ChatsController {
     private void handleLogout() throws Exception {
         user.logout();
         PeerMain.setUser(null);
+        messagePending = null;
+        notifier.setMessagePending(null);
+        notifier.setCurrentChat(null, null);
         PeerMain.setRoot("/gui/Login.fxml");  // Volver al login
     }
 
     @FXML
     private void handleSettings() {
+        notifier.setCurrentChat(null, null);
         PeerMain.setRoot("/gui/Settings.fxml");
     }
 }

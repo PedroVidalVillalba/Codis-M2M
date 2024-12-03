@@ -38,7 +38,7 @@
 
                 <!-- Campo de texto y botón para enviar -->
                 <HBox spacing="10" styleClass="pane">
-                    <TextField fx:id="messageField" promptText="Escribe un mensaje..." HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="messageField" promptText="Escribe un mensaje..." onAction="#handleSendMessage" HBox.hgrow="ALWAYS" />
                     <Button onAction="#handleSendMessage" text="󰒊" />
                 </HBox>
             </VBox>

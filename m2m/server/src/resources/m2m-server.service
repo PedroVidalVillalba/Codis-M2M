@@ -1,0 +1,12 @@
+[Unit]
+Description=M2M Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/java -jar /home/pedro/OneDrive/Cuarto/Primer_Cuatri/Distribuida/Practicas/P5/server.jar
+Restart=on-failure
+Slice=session.slice
+
+[Install]
+WantedBy=multi-user.target

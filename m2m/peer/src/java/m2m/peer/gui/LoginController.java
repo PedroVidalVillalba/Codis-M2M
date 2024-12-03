@@ -33,7 +33,7 @@ public class LoginController {
 
         try {
             User user = new User(username, password);
-            PeerMain.initializeNotifier(user);
+            initializeNotifier(user);
             user.login();
             PeerMain.setUser(user);
             PeerMain.setRoot("/gui/Chats.fxml");
@@ -57,7 +57,7 @@ public class LoginController {
 
         try {
             User user = new User(username, password);
-            PeerMain.initializeNotifier(user);
+            initializeNotifier(user);
             user.signUp();
             PeerMain.setUser(user);
             PeerMain.setRoot("/gui/Chats.fxml");
@@ -66,6 +66,13 @@ public class LoginController {
             errorLabel.setText(e.getMessage());
             errorLabel.setVisible(true);
         }
+    }
+
+    private static void initializeNotifier (User user) {
+        if (user == null) return;
+        GraphicalNotifier notifier = new GraphicalNotifier();
+        user.setNotifier(notifier);
+        notifier.setUser(user);
     }
 
 }

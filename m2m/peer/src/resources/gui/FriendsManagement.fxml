@@ -38,7 +38,7 @@
             <VBox spacing="10" alignment="CENTER" GridPane.columnIndex="1" VBox.vgrow="ALWAYS">
                 <Label styleClass="title-label" text="Buscar personas" />
                 <HBox spacing="5" alignment="CENTER">
-                    <TextField fx:id="searchField" promptText="Nombre de usuario" />
+                    <TextField fx:id="searchField" onAction="#searchForPeople" promptText="Nombre de usuario" />
                     <Button text="󰀖" onAction="#searchForPeople" />
                 </HBox>
                 <ListView fx:id="searchResultsListView" VBox.vgrow="ALWAYS" />

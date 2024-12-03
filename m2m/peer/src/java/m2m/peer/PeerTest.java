@@ -1,6 +1,6 @@
 package m2m.peer;
 
-import m2m.peer.gui.NotifierGUI;
+import m2m.peer.gui.GraphicalNotifier;
 
 import java.util.List;
 
@@ -10,8 +10,8 @@ public class PeerTest {
         User bob = new User("bob", "4321");
         System.out.println("Usuarios creados y conexión segura establecida con el servidor correctamente");
 
-        alice.setNotifier(new NotifierGUI());
-        bob.setNotifier(new NotifierGUI());
+        alice.setNotifier(new GraphicalNotifier());
+        bob.setNotifier(new GraphicalNotifier());
 
         try {
             alice.signUp();
